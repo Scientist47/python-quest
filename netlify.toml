@@ -1,0 +1,10 @@
+# Used only if you connect this repository to Netlify (instead of dragging the site folder).
+[build]
+  command = "npm run build"
+  publish = "site"
+
+[[headers]]
+  for = "/*.apk"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
+    Content-Disposition = "attachment; filename=python-quest.apk"

@@ -1,0 +1,1061 @@
+<title>Python Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=JetBrains+Mono:wght@400;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one-column game shell (max 640px). Map = winding trail of level nodes grouped into worlds; level = full-screen card stack with a fixed action bar. */
+:root{
+  --bg:#EDF1F7; --surface:#FFFFFF; --surface-2:#E2E8F1; --ink:#162033; --muted:#5A6780;
+  --blue:#2E69B0; --blue-deep:#1F4E87; --yellow:#FFC928; --yellow-ink:#5A4300;
+  --good:#1F8A4C; --good-bg:#DDF3E5; --bad:#C2363B; --bad-bg:#FBE3E3; --line:#CBD4E1;
+  --code-bg:#14213A; --code-ink:#E8EEF8; --code-key:#FFD25C; --code-str:#9FE3B4;
+  --f-display:"Bungee","Impact","Arial Black",sans-serif;
+  --f-body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-code:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1420; --surface:#172131; --surface-2:#202C40; --ink:#E7EDF6; --muted:#97A5BD;
+  --blue:#6FA3E8; --blue-deep:#4C82CC; --yellow:#FFD24A; --yellow-ink:#3A2B00;
+  --good:#5BD18B; --good-bg:#14301F; --bad:#FF7A7E; --bad-bg:#3A1A1D; --line:#2C3A52;
+  --code-bg:#0A101C; --code-ink:#E8EEF8; --code-key:#FFD25C; --code-str:#9FE3B4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1420; --surface:#172131; --surface-2:#202C40; --ink:#E7EDF6; --muted:#97A5BD;
+  --blue:#6FA3E8; --blue-deep:#4C82CC; --yellow:#FFD24A; --yellow-ink:#3A2B00;
+  --good:#5BD18B; --good-bg:#14301F; --bad:#FF7A7E; --bad-bg:#3A1A1D; --line:#2C3A52;
+  --code-bg:#0A101C; --code-ink:#E8EEF8; --code-key:#FFD25C; --code-str:#9FE3B4; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+code,.mono{font-family:var(--f-code);font-size:.92em}
+.shell{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:8px 16px}
+.logo{font-family:var(--f-display);font-size:1.5rem;letter-spacing:.02em;line-height:1;display:flex;align-items:center;gap:10px}
+.logo span{color:var(--blue)}
+.stats{display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 8px;font-weight:800;font-variant-numeric:tabular-nums;font-size:.95rem}
+.chip svg{width:18px;height:18px;flex:none}
+
+.rank{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:8px}
+.rank-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.rank-title{font-family:var(--f-display);font-size:1.1rem;color:var(--blue)}
+.rank-sub{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.bar{height:12px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--yellow);border-radius:999px;transition:width .5s ease}
+
+/* ---------- map ---------- */
+.world{margin-top:28px}
+.world-head{display:flex;align-items:center;gap:12px;background:var(--blue);color:#fff;border-radius:16px;padding:12px 16px}
+.world-num{font-family:var(--f-display);font-size:.8rem;letter-spacing:.08em;opacity:.85}
+.world-name{font-family:var(--f-display);font-size:1.15rem;line-height:1.2}
+.world-desc{font-size:.9rem;opacity:.9}
+.world-head > div{min-width:0}
+.world.locked .world-head{background:var(--surface-2);color:var(--muted)}
+.trail{position:relative;display:grid;gap:18px;padding:22px 0 6px}
+.node-row{display:flex;align-items:center;gap:14px}
+.node{width:76px;height:76px;flex:none;border-radius:50%;border:0;display:grid;place-items:center;position:relative;
+  background:var(--blue);color:#fff;box-shadow:0 6px 0 var(--blue-deep);transition:transform .12s}
+.node:active{transform:translateY(4px);box-shadow:0 2px 0 var(--blue-deep)}
+.node svg{width:32px;height:32px}
+.node.done{background:var(--yellow);color:var(--yellow-ink);box-shadow:0 6px 0 #C99A10}
+.node.locked{background:var(--surface-2);color:var(--muted);box-shadow:0 6px 0 var(--line);cursor:not-allowed}
+.node.boss{width:92px;height:92px;border-radius:22px}
+.node.current::after{content:"";position:absolute;inset:-8px;border-radius:inherit;border:3px solid var(--yellow);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25;transform:scale(.96)}50%{opacity:1;transform:scale(1.03)}}
+.node-label{min-width:0}
+.node-label b{display:block;font-weight:800;font-size:1.02rem}
+.node-label small{color:var(--muted);font-size:.85rem}
+.stars{display:inline-flex;gap:2px;margin-top:2px}
+.stars svg{width:16px;height:16px}
+.star-on{fill:var(--yellow);stroke:#B98A00}
+.star-off{fill:var(--surface-2);stroke:var(--line)}
+
+.badges{margin-top:32px}
+.section-label{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.badge{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:4px;align-content:start}
+.badge b{font-size:.92rem}
+.badge small{color:var(--muted);font-size:.8rem;line-height:1.35}
+.badge .medal{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--yellow);color:var(--yellow-ink);font-family:var(--f-display);font-size:.8rem}
+.badge.off{opacity:.55}
+.badge.off .medal{background:var(--surface-2);color:var(--muted)}
+.footer-note{margin-top:28px;color:var(--muted);font-size:.85rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:0}
+
+/* ---------- level ---------- */
+.level{min-height:100%;display:flex;flex-direction:column}
+.lv-top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:12px;padding-block:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
+.iconbtn svg{width:20px;height:20px}
+.lv-top .bar{flex:1}
+.hearts{display:flex;gap:2px;flex:none}
+.hearts svg{width:22px;height:22px}
+.heart-on{fill:var(--bad)} .heart-off{fill:var(--surface-2)}
+.hearts.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;margin-top:8px;display:grid;gap:14px;min-width:0}
+.kicker{font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--blue)}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:1.5rem;line-height:1.15;margin:0;text-wrap:balance}
+.card p{margin:0;max-width:62ch}
+.card p code,.card li code{background:var(--surface-2);padding:1px 6px;border-radius:6px}
+.card ul{margin:0;padding-left:20px;display:grid;gap:4px}
+pre.code{margin:0;background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:14px 16px;font-family:var(--f-code);font-size:.9rem;line-height:1.6;overflow-x:auto;white-space:pre}
+pre.code .k{color:var(--code-key)} pre.code .s{color:var(--code-str)} pre.code .c{color:#7F8EA8}
+.outlabel{font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:-8px}
+.console{margin:0;background:var(--surface-2);border-radius:12px;padding:12px 14px;font-family:var(--f-code);font-size:.88rem;white-space:pre-wrap;word-break:break-word;min-height:46px}
+.console.err{color:var(--bad)}
+
+.options{display:grid;gap:10px}
+.opt{text-align:left;background:var(--surface);border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;padding:12px 14px;font-family:var(--f-code);font-size:.95rem;white-space:pre-wrap;display:flex;gap:12px;align-items:center}
+.opt kbd{font-family:var(--f-body);font-weight:800;font-size:.8rem;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;flex:none;color:var(--muted)}
+.opt.sel{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,var(--surface))}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.opt:disabled{cursor:default}
+
+.editor-wrap{border-radius:12px;overflow:hidden;border:2px solid var(--code-bg)}
+textarea.editor{display:block;width:100%;min-height:170px;resize:vertical;border:0;margin:0;background:var(--code-bg);color:var(--code-ink);caret-color:var(--yellow);font-family:var(--f-code);font-size:.95rem;line-height:1.6;padding:14px 16px;tab-size:4;white-space:pre;overflow-x:auto}
+textarea.editor:focus{outline:none}
+.keys{display:flex;gap:6px;overflow-x:auto;background:var(--code-bg);padding:8px 10px;border-top:1px solid #26344F}
+.keys button{flex:none;min-width:38px;height:34px;border-radius:8px;border:1px solid #34456A;background:#1D2C4A;color:var(--code-ink);font-family:var(--f-code);font-size:.9rem;padding:0 8px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:800;display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);color:var(--ink);box-shadow:0 3px 0 var(--line)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.btn svg{width:16px;height:16px}
+.btn.run{background:var(--blue);color:#fff;box-shadow:0 3px 0 var(--blue-deep)}
+.hintbox{background:color-mix(in srgb,var(--yellow) 22%,var(--surface));border-radius:12px;padding:12px 14px;font-size:.95rem}
+
+.actionbar{position:sticky;bottom:0;margin-top:auto;padding-top:16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom,transparent,var(--bg) 18px)}
+.feedback{border-radius:16px;padding:14px 16px;margin-bottom:10px;display:grid;gap:4px}
+.feedback b{font-family:var(--f-display);font-weight:400;font-size:1.05rem}
+.feedback.good{background:var(--good-bg);color:var(--good)}
+.feedback.bad{background:var(--bad-bg);color:var(--bad)}
+.feedback p{margin:0;color:var(--ink);font-size:.95rem}
+.cta{width:100%;border:0;border-radius:16px;padding:15px;font-family:var(--f-display);font-size:1.05rem;letter-spacing:.04em;background:var(--good);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--good) 60%,#000)}
+.cta.blue{background:var(--blue);box-shadow:0 5px 0 var(--blue-deep)}
+.cta.red{background:var(--bad);box-shadow:0 5px 0 color-mix(in srgb,var(--bad) 60%,#000)}
+.cta:disabled{background:var(--surface-2);color:var(--muted);box-shadow:0 5px 0 var(--line);cursor:not-allowed}
+.cta:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 transparent}
+
+.result{text-align:center;justify-items:center;padding-block:32px}
+.result h2{font-size:2rem}
+.big-stars{display:flex;gap:8px}
+.big-stars svg{width:54px;height:54px}
+.big-stars svg{animation:pop .5s backwards}
+.big-stars svg:nth-child(2){animation-delay:.15s}.big-stars svg:nth-child(3){animation-delay:.3s}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;width:100%}
+.tally div{background:var(--surface-2);border-radius:12px;padding:10px;display:grid}
+.tally b{font-family:var(--f-display);font-weight:400;font-size:1.4rem;font-variant-numeric:tabular-nums}
+.tally small{color:var(--muted);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.newbadge{background:var(--yellow);color:var(--yellow-ink);border-radius:12px;padding:8px 14px;font-weight:800}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;max-width:calc(100% - 32px)}
+.engine{font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:420px){.node{width:66px;height:66px}.node.boss{width:80px;height:80px}.card{padding:16px}.logo{font-size:1.3rem}}
+/* android download card */
+.appcard{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.appcard .pr-icon{background:#3DDC84;color:#0B3D22}
+.appcard-text{flex:1 1 220px;min-width:0}
+.appcard .btn{text-decoration:none;white-space:nowrap}
+.appcard span.btn{color:var(--muted);cursor:default}
+/* difficulty + practice hub */
+.hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;gap:10px;align-content:start;min-width:0}
+.panel .section-label{margin:0}
+.panel-note{margin:0;color:var(--muted);font-size:.9rem;line-height:1.45}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface-2);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:8px 4px;font-weight:800;font-size:.88rem;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 2px 0 var(--line)}
+.seg button.on.d0{color:var(--good)} .seg button.on.d1{color:var(--blue)} .seg button.on.d2{color:var(--bad)}
+.pr-head{display:flex;gap:12px;align-items:flex-start}
+.pr-head > div{min-width:0}
+.pr-icon{width:42px;height:42px;border-radius:12px;background:var(--blue);color:#fff;display:grid;place-items:center;flex:none}
+.pr-icon svg{width:24px;height:24px}
+.pr-title{font-family:var(--f-display);font-weight:400;font-size:1.05rem;margin:0 0 2px}
+.practice.locked .pr-icon{background:var(--surface-2);color:var(--muted)}
+.practice .cta{padding:12px;font-size:.95rem}
+.weak{margin:0;font-size:.85rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.weak span{background:var(--bad-bg);color:var(--bad);border-radius:999px;padding:2px 10px;font-weight:700}
+.meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+.tag{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-radius:6px;padding:2px 7px;border:1.5px solid currentColor;flex:none;line-height:1.4}
+.tag.d0{color:var(--good)} .tag.d1{color:var(--blue)} .tag.d2{color:var(--bad)}
+.lv-top .tag{display:none}
+@media (min-width:460px){.lv-top .tag{display:inline-block}}
+.combo{font-family:var(--f-display);font-size:1.05rem;min-width:52px;text-align:center;border-radius:10px;padding:4px 8px;background:var(--surface-2);color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.combo.hot{background:var(--yellow);color:var(--yellow-ink)}
+.combo.bump{animation:pop .35s}
+.typed{width:100%;font-family:var(--f-code);font-size:1rem;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);resize:vertical}
+.typed:focus{outline:none;border-color:var(--blue)}
+.typed.right{border-color:var(--good);background:var(--good-bg)}
+.typed.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.card h2.prompt{font-family:var(--f-body);font-weight:800;font-size:1.15rem;line-height:1.4}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app" class="shell"></div>
+
+<script id="levels">
+const WORLDS = [
+ {name:"The Hatchery", desc:"Printing, variables, numbers and text"},
+ {name:"Fork in the Path", desc:"True, False and making decisions"},
+ {name:"Loop Caves", desc:"Repeating things and keeping lists"},
+ {name:"Function Forge", desc:"Building your own tools"},
+ {name:"Slice Market", desc:"Cutting, splitting and cleaning text"},
+ {name:"Error Swamp", desc:"Converting types and catching errors"},
+ {name:"Class Citadel", desc:"List tricks, classes and objects"}
+];
+const LEVELS = [
+{ id:"hello", world:0, title:"Say Hello", blurb:"Your first line of Python",
+  lesson:`<p>A Python program is a list of instructions. The computer runs them from top to bottom.</p>
+<p><code>print()</code> shows whatever you put inside the brackets. Text goes inside quotes, so Python knows it is text and not a command.</p>`,
+  example:`print("Hello!")\nprint("I am learning Python")`,
+  steps:[
+   {type:"quiz", code:`print("Hi" + "!")`, q:"What does this show?", options:["Hi!","Hi + !",'"Hi!"',"An error"], answer:0,
+    why:"The + joins two pieces of text together. The quotes are not shown when printing."},
+   {type:"code", prompt:"Make the program print exactly <code>Hello, Python!</code>", starter:`# Write your print line below\n`,
+    expect:"Hello, Python!", hint:"Put the text inside quotes, inside print( ).", solution:`print("Hello, Python!")`}
+  ]},
+{ id:"vars", world:0, title:"Name Your Boxes", blurb:"Variables store values",
+  lesson:`<p>A <b>variable</b> is a named box that holds a value. The <code>=</code> sign puts a value into the box.</p>
+<p>You can change what is in the box later, even using its old value.</p>`,
+  example:`coins = 3\ncoins = coins + 2\nprint(coins)   # shows 5`,
+  steps:[
+   {type:"quiz", code:`x = 5\nx = x + 2\nprint(x)`, q:"What is printed?", options:["5","7","x + 2","52"], answer:1,
+    why:"x starts at 5. Then x becomes 5 + 2, which is 7."},
+   {type:"code", prompt:"The player's <code>score</code> is 10. Add 5 to it, then print the score.", starter:`score = 10\n# add 5 to score here\n\nprint(score)\n`,
+    expect:"15", test:`assert score == 15, "score should be 15 at the end"`, requires:["score\\s*(=|\\+=)"], requiresMsg:"Change the score variable itself, don't just print 15.",
+    hint:"Write score = score + 5 on its own line, before the print.", solution:`score = 10\nscore = score + 5\nprint(score)`}
+  ]},
+{ id:"math", world:0, title:"Number Crunch", blurb:"Math operators",
+  lesson:`<p>Python is a great calculator.</p>
+<ul><li><code>+ - *</code> add, subtract, multiply</li><li><code>/</code> divides and gives a decimal: <code>7 / 2</code> is <code>3.5</code></li><li><code>//</code> divides and keeps only the whole part: <code>7 // 2</code> is <code>3</code></li><li><code>%</code> gives the remainder: <code>7 % 2</code> is <code>1</code></li><li><code>**</code> is power: <code>2 ** 3</code> is <code>8</code></li></ul>`,
+  example:`print(10 / 4)    # 2.5\nprint(10 // 4)   # 2\nprint(10 % 4)    # 2`,
+  steps:[
+   {type:"quiz", code:`print(17 % 5)`, q:"What is printed?", options:["3.4","3","2","12"], answer:2,
+    why:"17 divided by 5 is 3 with 2 left over. % gives the leftover."},
+   {type:"code", prompt:"A pizza has 8 slices for 3 friends. Print how many <b>whole</b> slices each friend gets, then on the next line print how many are left over.", starter:`slices = 8\nfriends = 3\n\n`,
+    expect:"2\n2", requires:["//","%"], requiresMsg:"Use // and % with the variables so it works for any pizza.",
+    hint:"print(slices // friends) then print(slices % friends).", solution:`slices = 8\nfriends = 3\nprint(slices // friends)\nprint(slices % friends)`}
+  ]},
+{ id:"strings", world:0, title:"String Theory", blurb:"Working with text",
+  lesson:`<p>Text values are called <b>strings</b>. They come with handy tools:</p>
+<ul><li><code>len(word)</code> counts the characters</li><li><code>word.upper()</code> makes it CAPITALS</li><li>An <b>f-string</b> drops values into text: put <code>f</code> before the quote and the value in <code>{ }</code></li></ul>`,
+  example:`pet = "eel"\nprint(f"My {pet} has {len(pet)} letters")\n# My eel has 3 letters`,
+  steps:[
+   {type:"quiz", code:`print(len("snake"))`, q:"What is printed?", options:["snake","4","5","6"], answer:2,
+    why:"s-n-a-k-e is 5 characters."},
+   {type:"code", prompt:"Using <code>name</code>, print exactly <code>MONTY has 5 letters</code>. Use <code>.upper()</code> and <code>len()</code>.", starter:`name = "monty"\n\n`,
+    expect:"MONTY has 5 letters", requires:["upper\\(","len\\("], requiresMsg:"Use name.upper() and len(name) rather than typing the answer.",
+    hint:`print(f"{name.upper()} has {len(name)} letters")`, solution:`name = "monty"\nprint(f"{name.upper()} has {len(name)} letters")`}
+  ]},
+{ id:"bools", world:1, title:"True or False", blurb:"Comparisons",
+  lesson:`<p>A comparison asks a question, and Python answers <code>True</code> or <code>False</code>.</p>
+<ul><li><code>==</code> equal (two signs, because one = means "store")</li><li><code>!=</code> not equal</li><li><code>&lt; &gt; &lt;= &gt;=</code> less and greater</li><li><code>and</code> is True only when both sides are True</li></ul>`,
+  example:`hp = 0\nprint(hp == 0)          # True\nprint(hp > 0 and hp < 5)  # False`,
+  steps:[
+   {type:"quiz", code:`print(3 > 5)`, q:"What is printed?", options:["True","False","3","5"], answer:1,
+    why:"3 is not greater than 5, so the answer is False."},
+   {type:"code", prompt:"Set <code>is_teen</code> to a comparison that is True when <code>age</code> is from 13 to 19. Then print it.", starter:`age = 15\nis_teen = \nprint(is_teen)\n`,
+    expect:"True", requires:["and|<="], requiresMsg:"Use comparisons with age, not just the word True.",
+    hint:"is_teen = age >= 13 and age <= 19", solution:`age = 15\nis_teen = age >= 13 and age <= 19\nprint(is_teen)`}
+  ]},
+{ id:"ifelse", world:1, title:"Choose Your Path", blurb:"if and else",
+  lesson:`<p><code>if</code> runs code only when something is True. <code>else</code> runs when it is False.</p>
+<p>The line ends with a colon <code>:</code>, and the code inside is pushed in by 4 spaces. That push is called <b>indentation</b>, and Python needs it.</p>`,
+  example:`hp = 2\nif hp > 0:\n    print("Still standing")\nelse:\n    print("Game over")`,
+  steps:[
+   {type:"quiz", code:`temp = 30\nif temp > 25:\n    print("hot")\nelse:\n    print("cold")`, q:"What is printed?", options:["hot","cold","hot\ncold","Nothing"], answer:0,
+    why:"30 > 25 is True, so only the if part runs."},
+   {type:"code", prompt:"If <code>coins</code> is 10 or more, print <code>Buy sword</code>. Otherwise print <code>Keep saving</code>.", starter:`coins = 7\n\n`,
+    expect:"Keep saving", requires:["\\bif\\b","\\belse\\b"], requiresMsg:"Use an if and an else so the shop works for any number of coins.",
+    hint:"if coins >= 10:  then an indented print, then else: with another indented print.", solution:`coins = 7\nif coins >= 10:\n    print("Buy sword")\nelse:\n    print("Keep saving")`}
+  ]},
+{ id:"elif", world:1, title:"Many Roads", blurb:"elif for more choices",
+  lesson:`<p><code>elif</code> means "else if". Python checks each condition from top to bottom and runs the <b>first</b> one that is True. The rest are skipped.</p>`,
+  example:`n = 0\nif n > 0:\n    print("positive")\nelif n < 0:\n    print("negative")\nelse:\n    print("zero")`,
+  steps:[
+   {type:"quiz", code:`x = 95\nif x > 50:\n    print("big")\nelif x > 90:\n    print("huge")\nelse:\n    print("small")`, q:"What is printed?", options:["big","huge","big\nhuge","small"], answer:0,
+    why:"x > 50 is True first, so Python prints big and skips the rest, even though x > 90 is also True."},
+   {type:"code", prompt:"Print the grade for <code>score</code>: 90 or more is <code>A</code>, 70 or more is <code>B</code>, anything else is <code>C</code>.", starter:`score = 72\n\n`,
+    expect:"B", requires:["\\belif\\b"], requiresMsg:"Use if, elif and else.",
+    hint:"Check the biggest number first: if score >= 90, then elif score >= 70, then else.", solution:`score = 72\nif score >= 90:\n    print("A")\nelif score >= 70:\n    print("B")\nelse:\n    print("C")`}
+  ]},
+{ id:"for", world:2, title:"Loop the Loop", blurb:"for and range",
+  lesson:`<p>A <code>for</code> loop repeats code. <code>range(n)</code> counts from 0 up to <b>but not including</b> n.</p>
+<p><code>range(1, 4)</code> starts at 1 and gives 1, 2, 3.</p>`,
+  example:`for i in range(3):\n    print("Jump", i)`,
+  steps:[
+   {type:"quiz", code:`for i in range(3):\n    print(i)`, q:"What is printed?", options:["1\n2\n3","0\n1\n2","0\n1\n2\n3","3"], answer:1,
+    why:"range(3) gives 0, 1, 2. It stops before 3."},
+   {type:"code", prompt:"Use a loop to print the numbers 1 to 5, each on its own line.", starter:`# use for and range\n`,
+    expect:"1\n2\n3\n4\n5", requires:["\\bfor\\b","range"], requiresMsg:"Use a for loop with range, not five print lines.",
+    hint:"for n in range(1, 6): then print(n) indented.", solution:`for n in range(1, 6):\n    print(n)`}
+  ]},
+{ id:"lists", world:2, title:"Loot Bag", blurb:"Lists hold many values",
+  lesson:`<p>A <b>list</b> keeps many values in order, inside square brackets.</p>
+<ul><li>Positions start at 0: <code>bag[0]</code> is the first item</li><li><code>bag.append(x)</code> adds to the end</li><li><code>len(bag)</code> counts the items</li></ul>`,
+  example:`bag = ["sword", "map"]\nbag.append("torch")\nprint(bag[0])   # sword\nprint(len(bag)) # 3`,
+  steps:[
+   {type:"quiz", code:`pets = ["cat", "dog", "eel"]\nprint(pets[1])`, q:"What is printed?", options:["cat","dog","eel","1"], answer:1,
+    why:"Counting starts at 0, so pets[1] is the second item."},
+   {type:"code", prompt:"Add <code>\"key\"</code> to the <code>loot</code> list. Then print the list, and on the next line print how many items it has.", starter:`loot = ["coin", "gem"]\n\n`,
+    expect:"['coin', 'gem', 'key']\n3", requires:["append"], requiresMsg:"Use loot.append(...) to add the key.",
+    hint:`loot.append("key") then print(loot) then print(len(loot)).`, solution:`loot = ["coin", "gem"]\nloot.append("key")\nprint(loot)\nprint(len(loot))`}
+  ]},
+{ id:"totals", world:2, title:"Treasure Count", blurb:"Loops over lists, and while",
+  lesson:`<p>A <code>for</code> loop can walk through a list one item at a time. A running total starts at 0 and grows each time.</p>
+<p>A <code>while</code> loop repeats as long as its condition stays True.</p>`,
+  example:`total = 0\nfor gold in [5, 10, 20]:\n    total = total + gold\nprint(total)   # 35`,
+  steps:[
+   {type:"quiz", code:`n = 3\nwhile n > 0:\n    n = n - 1\nprint(n)`, q:"What is printed?", options:["3","1","0","-1"], answer:2,
+    why:"n goes 3, 2, 1, 0. When n is 0, n > 0 is False, so the loop stops and prints 0."},
+   {type:"code", prompt:"Add up all the numbers in <code>gems</code> with a loop, then print the total.", starter:`gems = [4, 8, 15, 16]\ntotal = 0\n\n`,
+    expect:"43", requires:["\\bfor\\b"], requiresMsg:"Use a for loop to add each gem.",
+    hint:"for g in gems: then total = total + g, then print(total) after the loop (not indented).", solution:`gems = [4, 8, 15, 16]\ntotal = 0\nfor g in gems:\n    total = total + g\nprint(total)`}
+  ]},
+{ id:"funcs", world:3, title:"Spell Crafting", blurb:"def and return",
+  lesson:`<p>A <b>function</b> is a named recipe you can use again and again. <code>def</code> creates it. The values in brackets are its inputs. <code>return</code> sends back the answer.</p>`,
+  example:`def greet(name):\n    return "Hi " + name\n\nprint(greet("Ada"))   # Hi Ada`,
+  steps:[
+   {type:"quiz", code:`def double(n):\n    return n * 2\n\nprint(double(4))`, q:"What is printed?", options:["4","8","n * 2","44"], answer:1,
+    why:"double(4) returns 4 * 2, which is 8."},
+   {type:"code", prompt:"Write a function <code>area(w, h)</code> that returns the area of a rectangle (width times height).", starter:`def area(w, h):\n    # your code here\n\nprint(area(3, 4))\n`,
+    test:`assert area(3, 4) == 12, "area(3, 4) should be 12"\nassert area(5, 5) == 25, "area(5, 5) should be 25"\nassert area(10, 0) == 0, "area(10, 0) should be 0"`,
+    hint:"Inside the function, write: return w * h", solution:`def area(w, h):\n    return w * h\n\nprint(area(3, 4))`}
+  ]},
+{ id:"dicts", world:3, title:"The Inventory", blurb:"Dictionaries",
+  lesson:`<p>A <b>dictionary</b> stores pairs: a key and its value, like a word and its meaning. Use curly brackets.</p>
+<ul><li><code>hero["hp"]</code> reads the value for "hp"</li><li><code>hero["mp"] = 4</code> adds or changes a pair</li></ul>`,
+  example:`hero = {"name": "Ada", "hp": 10}\nhero["hp"] = hero["hp"] - 3\nprint(hero["hp"])   # 7`,
+  steps:[
+   {type:"quiz", code:`hero = {"hp": 10}\nhero["hp"] += 5\nprint(hero["hp"])`, q:"What is printed?", options:["10","5","15","hp"], answer:2,
+    why:"+= 5 adds 5 to the stored value: 10 + 5 = 15."},
+   {type:"code", prompt:"Add an <code>\"arrow\"</code> entry worth <code>10</code> to <code>inventory</code>. Then print the potions plus the arrows.", starter:`inventory = {"potion": 2}\n\n`,
+    expect:"12", test:`assert inventory.get("arrow") == 10, 'inventory["arrow"] should be 10'`, requires:["\\[\\s*[\"']arrow"], requiresMsg:'Add the arrows with inventory["arrow"] = 10.',
+    hint:`inventory["arrow"] = 10 then print(inventory["potion"] + inventory["arrow"])`, solution:`inventory = {"potion": 2}\ninventory["arrow"] = 10\nprint(inventory["potion"] + inventory["arrow"])`}
+  ]},
+{ id:"boss", world:3, boss:true, badge:"boss", title:"Boss: The Vowel Serpent", blurb:"Use everything you know",
+  lesson:`<p>The Vowel Serpent only lets you pass if you can count. This fight uses a function, a loop and an if together.</p>
+<p>New trick: <code>letter in "aeiou"</code> is True when the letter is a vowel.</p>`,
+  example:`for letter in "hi":\n    print(letter)\n# h\n# i`,
+  steps:[
+   {type:"quiz", code:`count = 0\nfor c in "python":\n    if c in "aeiou":\n        count += 1\nprint(count)`, q:"What is printed?", options:["0","1","2","6"], answer:1,
+    why:"Only o is a vowel in python (y is not in \"aeiou\"), so count is 1."},
+   {type:"code", prompt:"Write <code>count_vowels(word)</code> that returns how many vowels (a, e, i, o, u) are in a lowercase word.", starter:`def count_vowels(word):\n    count = 0\n    # loop through the letters\n\n    return count\n\nprint(count_vowels("serpent"))\n`,
+    test:`assert count_vowels("serpent") == 2, 'count_vowels("serpent") should be 2'\nassert count_vowels("aeiou") == 5, 'count_vowels("aeiou") should be 5'\nassert count_vowels("rhythm") == 0, 'count_vowels("rhythm") should be 0'\nassert count_vowels("") == 0, 'count_vowels("") should be 0'`,
+    hint:"for letter in word:  then  if letter in \"aeiou\":  then  count += 1", solution:`def count_vowels(word):\n    count = 0\n    for letter in word:\n        if letter in "aeiou":\n            count += 1\n    return count\n\nprint(count_vowels("serpent"))`}
+  ]},
+
+/* ---------- World 5: Slice Market ---------- */
+{ id:"slices", world:4, title:"Slice It Up", blurb:"Picking parts of a string",
+  lesson:`<p>You can grab parts of a string (or a list) with square brackets.</p>
+<ul><li><code>word[0]</code> is the first character</li><li><code>word[-1]</code> is the <b>last</b> character. Negative numbers count from the end</li><li><code>word[1:4]</code> is a <b>slice</b>: from position 1 up to but not including 4</li><li><code>word[:3]</code> is the first three, <code>word[::-1]</code> is the whole thing backwards</li></ul>`,
+  example:`word = "market"\nprint(word[0])     # m\nprint(word[-1])    # t\nprint(word[:3])    # mar\nprint(word[::-1])  # tekram`,
+  steps:[
+   {type:"quiz", code:`word = "python"\nprint(word[1:4])`, q:"What is printed?", options:["pyt","yth","ytho","pyth"], answer:1,
+    why:"Positions 1, 2 and 3 are y, t, h. The slice stops before position 4."},
+   {type:"code", prompt:"Print the first 3 letters of <code>password</code>, then on the next line print its last letter.", starter:`password = "dragonfly"\n\n`,
+    expect:"dra\ny", requires:["password\\s*\\[\\s*:?\\s*\\d*\\s*:\\s*3","password\\s*\\[\\s*-1\\s*\\]"], requiresMsg:"Use a slice like password[:3] and password[-1].",
+    hint:"print(password[:3]) then print(password[-1])", solution:`password = "dragonfly"\nprint(password[:3])\nprint(password[-1])`}
+  ]},
+{ id:"split", world:4, title:"Split the Bill", blurb:"split and join",
+  lesson:`<p><code>text.split()</code> breaks a string into a list of words. Give it a separator to split on something else, like <code>split(",")</code>.</p>
+<p><code>"-".join(words)</code> does the opposite: it glues a list back into one string, with <code>-</code> between each piece.</p>`,
+  example:`items = "apple,bread,milk".split(",")\nprint(items)          # ['apple', 'bread', 'milk']\nprint(" + ".join(items))  # apple + bread + milk`,
+  steps:[
+   {type:"quiz", code:`print("a-b-c".split("-"))`, q:"What is printed?", options:["abc","['a', 'b', 'c']","['a-b-c']","a b c"], answer:1,
+    why:"split cuts the string at each - and gives back a list of the pieces."},
+   {type:"code", prompt:"Split <code>sentence</code> into words. Print how many words there are, then print the words joined with underscores: <code>the_quick_brown_fox</code>.", starter:`sentence = "the quick brown fox"\n\n`,
+    expect:"4\nthe_quick_brown_fox", requires:["split\\(","join\\("], requiresMsg:"Use .split() to make the list and \"_\".join() to glue it.",
+    hint:`words = sentence.split()  then  print(len(words))  then  print("_".join(words))`, solution:`sentence = "the quick brown fox"\nwords = sentence.split()\nprint(len(words))\nprint("_".join(words))`}
+  ]},
+{ id:"clean", world:4, title:"Clean-Up Crew", blurb:"Handy string methods",
+  lesson:`<p>Text from users is often messy. These methods return a cleaned-up copy:</p>
+<ul><li><code>.strip()</code> removes spaces from both ends</li><li><code>.lower()</code> and <code>.upper()</code> change the case</li><li><code>.replace("a", "b")</code> swaps every "a" for "b"</li><li><code>.startswith("x")</code> is True if the text begins with "x"</li></ul>
+<p>You can chain them: <code>text.strip().lower()</code>.</p>`,
+  example:`name = "  ADA lovelace "\nprint(name.strip().title())   # Ada Lovelace\nprint("cat".replace("c", "b"))  # bat`,
+  steps:[
+   {type:"quiz", code:`print("Hello".replace("l", "L"))`, q:"What is printed?", options:["Hello","HeLlo","HeLLo","HELLO"], answer:2,
+    why:"replace swaps every lowercase l, so both become L."},
+   {type:"code", prompt:"Clean up <code>messy</code>: remove the extra spaces and make it all lowercase, then print it. The output should be <code>python rocks</code>.", starter:`messy = "   PyThOn RoCkS   "\n\n`,
+    expect:"python rocks", requires:["strip\\(","lower\\("], requiresMsg:"Use .strip() and .lower() on messy.",
+    hint:"print(messy.strip().lower())", solution:`messy = "   PyThOn RoCkS   "\nprint(messy.strip().lower())`}
+  ]},
+{ id:"palindrome", world:4, boss:true, badge:"mirror", title:"Boss: The Mirror Merchant", blurb:"Slices, methods and functions",
+  lesson:`<p>The Mirror Merchant only trades with travellers who can spot a <b>palindrome</b>: a word that reads the same forwards and backwards, like "level" or "Racecar".</p>
+<p>Capital letters and spaces at the ends shouldn't matter. Clean the word first, then compare it with its reverse.</p>`,
+  example:`w = "Noon"\nclean = w.lower()\nprint(clean, clean[::-1])   # noon noon`,
+  steps:[
+   {type:"quiz", code:`w = "stressed"\nprint(w[::-1])`, q:"What is printed?", options:["stressed","desserts","dessert","sserts"], answer:1,
+    why:"[::-1] reverses the string: stressed backwards is desserts."},
+   {type:"code", prompt:"Write <code>is_palindrome(word)</code> that returns <code>True</code> if the word reads the same backwards. Ignore capital letters and spaces at the ends.", starter:`def is_palindrome(word):\n    # clean the word, then compare\n    return False\n\nprint(is_palindrome("Racecar"))\n`,
+    test:`assert is_palindrome("level") == True, 'is_palindrome("level") should be True'\nassert is_palindrome("Racecar") == True, 'is_palindrome("Racecar") should be True (ignore capitals)'\nassert is_palindrome(" noon ") == True, 'is_palindrome(" noon ") should be True (ignore end spaces)'\nassert is_palindrome("python") == False, 'is_palindrome("python") should be False'`,
+    hint:"clean = word.strip().lower()  then  return clean == clean[::-1]", solution:`def is_palindrome(word):\n    clean = word.strip().lower()\n    return clean == clean[::-1]\n\nprint(is_palindrome("Racecar"))`}
+  ]},
+
+/* ---------- World 6: Error Swamp ---------- */
+{ id:"types", world:5, title:"Shape Shifters", blurb:"Converting between types",
+  lesson:`<p>Every value has a <b>type</b>: <code>int</code> for whole numbers, <code>float</code> for decimals, <code>str</code> for text, <code>bool</code> for True/False.</p>
+<p>Text that looks like a number is still text. <code>"3" + "4"</code> gives <code>"34"</code>. Convert it first:</p>
+<ul><li><code>int("12")</code> turns text into a number</li><li><code>str(12)</code> turns a number into text</li><li><code>float("2.5")</code> makes a decimal</li></ul>`,
+  example:`text = "20"\nprint(text + "5")        # 205\nprint(int(text) + 5)     # 25\nprint("Level " + str(3))  # Level 3`,
+  steps:[
+   {type:"quiz", code:`print("3" + "4")`, q:"What is printed?", options:["7","34","3 + 4","An error"], answer:1,
+    why:"Both values are text, so + joins them instead of adding."},
+   {type:"code", prompt:"<code>age_text</code> came from a form, so it's text. Print <code>Next year you will be 13</code> by converting it and adding 1.", starter:`age_text = "12"\n\n`,
+    expect:"Next year you will be 13", requires:["int\\(\\s*age_text"], requiresMsg:"Convert with int(age_text) and add 1, rather than typing 13.",
+    hint:`next_age = int(age_text) + 1  then  print(f"Next year you will be {next_age}")`, solution:`age_text = "12"\nnext_age = int(age_text) + 1\nprint(f"Next year you will be {next_age}")`}
+  ]},
+{ id:"tryexcept", world:5, title:"Catch the Bug", blurb:"try and except",
+  lesson:`<p>Some code can fail. <code>int("abc")</code> causes a <code>ValueError</code> and the program stops.</p>
+<p>Wrap risky code in <code>try</code>. If an error happens, Python jumps to <code>except</code> instead of crashing.</p>`,
+  example:`try:\n    n = int("ten")\n    print("Got", n)\nexcept ValueError:\n    print("That wasn't a number")`,
+  steps:[
+   {type:"quiz", code:`try:\n    print(int("abc"))\nexcept ValueError:\n    print("oops")\nprint("done")`, q:"What is printed?", options:["abc\ndone","oops","oops\ndone","An error"], answer:2,
+    why:"int(\"abc\") fails, so except prints oops. The program keeps going and prints done."},
+   {type:"code", prompt:"Write <code>safe_int(text)</code>. It returns the text as a number, or <code>0</code> if the text isn't a valid number.", starter:`def safe_int(text):\n    return int(text)\n\nprint(safe_int("42"))\nprint(safe_int("hi"))\n`,
+    test:`assert safe_int("42") == 42, 'safe_int("42") should be 42'\nassert safe_int("-7") == -7, 'safe_int("-7") should be -7'\nassert safe_int("hi") == 0, 'safe_int("hi") should be 0'\nassert safe_int("") == 0, 'safe_int("") should be 0'`,
+    requires:["\\btry\\b","\\bexcept\\b"], requiresMsg:"Use try and except inside the function.",
+    hint:"try:  return int(text)   then   except ValueError:  return 0", solution:`def safe_int(text):\n    try:\n        return int(text)\n    except ValueError:\n        return 0\n\nprint(safe_int("42"))\nprint(safe_int("hi"))`}
+  ]},
+{ id:"gremlin", world:5, boss:true, badge:"gremlin", title:"Boss: The Swamp Gremlin", blurb:"Loops, try/except and math",
+  lesson:`<p>The Swamp Gremlin scrambled your scores. Some are numbers written as text, some are junk.</p>
+<p>To beat it, keep only the values that convert to numbers and work out their average (total divided by count). Watch out: if nothing is valid, dividing by zero would crash.</p>`,
+  example:`scores = ["10", "oops", "20"]\ngood = []\nfor s in scores:\n    try:\n        good.append(int(s))\n    except ValueError:\n        pass\nprint(good)   # [10, 20]`,
+  steps:[
+   {type:"quiz", code:`nums = [4, 8, 6]\nprint(sum(nums) / len(nums))`, q:"What is printed?", options:["6","6.0","18","3"], answer:1,
+    why:"sum is 18, len is 3. The / operator always gives a decimal, so 6.0."},
+   {type:"code", prompt:"Write <code>average(items)</code>: return the average of the items that are valid whole numbers. Skip the junk. If no item is valid, return <code>0</code>.", starter:`def average(items):\n    total = 0\n    count = 0\n    # loop, try to convert, skip the junk\n\n    return total / count\n\nprint(average(["4", "x", "8"]))\n`,
+    test:`assert average(["4", "x", "8"]) == 6, 'average(["4", "x", "8"]) should be 6'\nassert average(["1", "2"]) == 1.5, 'average(["1", "2"]) should be 1.5'\nassert average(["a", "b"]) == 0, 'average(["a", "b"]) should be 0, not a crash'\nassert average([]) == 0, 'average([]) should be 0'`,
+    hint:"In the loop: try: total += int(x) and count += 1, except ValueError: pass. Before dividing: if count == 0: return 0", solution:`def average(items):\n    total = 0\n    count = 0\n    for x in items:\n        try:\n            total += int(x)\n            count += 1\n        except ValueError:\n            pass\n    if count == 0:\n        return 0\n    return total / count\n\nprint(average(["4", "x", "8"]))`}
+  ]},
+
+/* ---------- World 7: Class Citadel ---------- */
+{ id:"comprehension", world:6, title:"List Magic", blurb:"List comprehensions",
+  lesson:`<p>A <b>list comprehension</b> builds a new list in one line. Read it like a sentence: "give me <i>this</i> for each item in the list, if it passes a test".</p>`,
+  example:`nums = [1, 2, 3, 4]\nsquares = [n * n for n in nums]\nevens = [n for n in nums if n % 2 == 0]\nprint(squares)  # [1, 4, 9, 16]\nprint(evens)    # [2, 4]`,
+  steps:[
+   {type:"quiz", code:`print([n * 2 for n in range(3)])`, q:"What is printed?", options:["[2, 4, 6]","[0, 2, 4]","[0, 1, 2]","6"], answer:1,
+    why:"range(3) gives 0, 1, 2. Doubling each gives 0, 2, 4."},
+   {type:"code", prompt:"Use a list comprehension to make <code>big</code>: only the numbers in <code>nums</code> greater than 5. Then print it.", starter:`nums = [3, 8, 1, 10, 6]\n\n`,
+    expect:"[8, 10, 6]", requires:["\\[[^\\]]*\\bfor\\b[^\\]]*\\bin\\b[^\\]]*\\bif\\b[^\\]]*\\]"], requiresMsg:"Build it in one line: [n for n in nums if ...].",
+    hint:"big = [n for n in nums if n > 5]  then  print(big)", solution:`nums = [3, 8, 1, 10, 6]\nbig = [n for n in nums if n > 5]\nprint(big)`}
+  ]},
+{ id:"classes", world:6, title:"Blueprints", blurb:"Classes and objects",
+  lesson:`<p>A <b>class</b> is a blueprint. Each <b>object</b> made from it has its own data.</p>
+<p><code>__init__</code> runs when you create an object. <code>self</code> means "this object", so <code>self.name = name</code> stores the name on it.</p>`,
+  example:`class Pet:\n    def __init__(self, name, kind):\n        self.name = name\n        self.kind = kind\n\np = Pet("Monty", "python")\nprint(p.name, "is a", p.kind)`,
+  steps:[
+   {type:"quiz", code:`class Dog:\n    def __init__(self, name):\n        self.name = name\n\nd = Dog("Rex")\nprint(d.name)`, q:"What is printed?", options:["name","Dog","Rex","self.name"], answer:2,
+    why:"Dog(\"Rex\") runs __init__ with name = \"Rex\" and stores it as d.name."},
+   {type:"code", prompt:"Finish the <code>Hero</code> class so each hero stores a <code>name</code> and <code>hp</code> (health points).", starter:`class Hero:\n    def __init__(self, name, hp):\n        pass  # store name and hp on self\n\nh = Hero("Ada", 10)\nprint(h.name, h.hp)\n`,
+    test:`a = Hero("Ada", 10)\nb = Hero("Lin", 7)\nassert a.name == "Ada", 'Hero("Ada", 10).name should be "Ada"'\nassert a.hp == 10, 'Hero("Ada", 10).hp should be 10'\nassert b.hp == 7, 'each hero should keep its own hp'`,
+    hint:"self.name = name  and  self.hp = hp  inside __init__", solution:`class Hero:\n    def __init__(self, name, hp):\n        self.name = name\n        self.hp = hp\n\nh = Hero("Ada", 10)\nprint(h.name, h.hp)`}
+  ]},
+{ id:"methods", world:6, title:"Spellbook Methods", blurb:"Functions that belong to objects",
+  lesson:`<p>A <b>method</b> is a function inside a class. Its first input is always <code>self</code>, so it can read and change the object's data.</p>
+<p>You call it with a dot: <code>wallet.earn(5)</code>.</p>`,
+  example:`class Lamp:\n    def __init__(self):\n        self.on = False\n    def switch(self):\n        self.on = not self.on\n\nlamp = Lamp()\nlamp.switch()\nprint(lamp.on)   # True`,
+  steps:[
+   {type:"quiz", code:`class Counter:\n    def __init__(self):\n        self.n = 0\n    def add(self):\n        self.n += 1\n\nc = Counter()\nc.add()\nc.add()\nprint(c.n)`, q:"What is printed?", options:["0","1","2","An error"], answer:2,
+    why:"Each add() call increases c.n by 1. Called twice, so 2."},
+   {type:"code", prompt:"Finish <code>Wallet</code>. <code>earn(amount)</code> adds coins. <code>spend(amount)</code> takes coins away and returns <code>True</code>, but only if there are enough. If not, it changes nothing and returns <code>False</code>.", starter:`class Wallet:\n    def __init__(self):\n        self.coins = 0\n\n    def earn(self, amount):\n        pass\n\n    def spend(self, amount):\n        pass\n\nw = Wallet()\nw.earn(10)\nprint(w.spend(4), w.coins)\n`,
+    test:`w = Wallet()\nw.earn(10)\nassert w.coins == 10, "after earn(10), coins should be 10"\nassert w.spend(4) == True, "spend(4) with 10 coins should return True"\nassert w.coins == 6, "after spending 4, coins should be 6"\nassert w.spend(50) == False, "spend(50) with 6 coins should return False"\nassert w.coins == 6, "a failed spend should not change coins"`,
+    hint:"earn: self.coins += amount. spend: if amount <= self.coins: subtract and return True, otherwise return False.", solution:`class Wallet:\n    def __init__(self):\n        self.coins = 0\n\n    def earn(self, amount):\n        self.coins += amount\n\n    def spend(self, amount):\n        if amount <= self.coins:\n            self.coins -= amount\n            return True\n        return False\n\nw = Wallet()\nw.earn(10)\nprint(w.spend(4), w.coins)`}
+  ]},
+{ id:"king", world:6, boss:true, badge:"king", title:"Final Boss: The Python King", blurb:"Classes, dictionaries and methods",
+  lesson:`<p>The Python King guards the citadel's treasury. Prove you can build a real tool: an <code>Inventory</code> class that keeps a dictionary of items and how many of each you have.</p>
+<p>Useful trick: <code>d.get(key, 0)</code> returns the value for key, or 0 if the key isn't there yet.</p>`,
+  example:`stock = {"apple": 3}\nprint(stock.get("apple", 0))  # 3\nprint(stock.get("pear", 0))   # 0\nprint(sum(stock.values()))    # 3`,
+  steps:[
+   {type:"quiz", code:`bag = {"gem": 2}\nbag["gem"] = bag.get("gem", 0) + 3\nbag["map"] = bag.get("map", 0) + 1\nprint(bag)`, q:"What is printed?", options:["{'gem': 3, 'map': 1}","{'gem': 5, 'map': 1}","{'gem': 5}","An error"], answer:1,
+    why:"gem was 2, plus 3 is 5. map wasn't there, so get gives 0, plus 1 is 1."},
+   {type:"code", prompt:"Build <code>Inventory</code>: <code>add(item, qty)</code> adds to an item's count, <code>count(item)</code> returns how many you have (0 if none), and <code>total()</code> returns the number of things across all items.", starter:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    def add(self, item, qty):\n        pass\n\n    def count(self, item):\n        pass\n\n    def total(self):\n        pass\n\ninv = Inventory()\ninv.add("arrow", 10)\ninv.add("arrow", 5)\ninv.add("potion", 2)\nprint(inv.count("arrow"), inv.total())\n`,
+    test:`inv = Inventory()\ninv.add("arrow", 10)\ninv.add("arrow", 5)\ninv.add("potion", 2)\nassert inv.count("arrow") == 15, 'adding 10 then 5 arrows should give count("arrow") == 15'\nassert inv.count("potion") == 2, 'count("potion") should be 2'\nassert inv.count("dragon") == 0, 'count of a missing item should be 0'\nassert inv.total() == 17, 'total() should be 17'\nassert Inventory().total() == 0, 'an empty inventory total() should be 0'`,
+    hint:"add: self.items[item] = self.items.get(item, 0) + qty. count: return self.items.get(item, 0). total: return sum(self.items.values())", solution:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    def add(self, item, qty):\n        self.items[item] = self.items.get(item, 0) + qty\n\n    def count(self, item):\n        return self.items.get(item, 0)\n\n    def total(self):\n        return sum(self.items.values())\n\ninv = Inventory()\ninv.add("arrow", 10)\ninv.add("arrow", 5)\ninv.add("potion", 2)\nprint(inv.count("arrow"), inv.total())`}
+  ]}
+];
+</script>
+
+<script>
+/* ===================== app config ===================== */
+// IN_APP is switched to true by the Android build, which hides the download card inside the app.
+// APK_URL: a file name next to index.html on your web host, or a full https link (e.g. a GitHub release).
+const IN_APP = false;
+const APK_URL = "python-quest.apk";
+
+/* ===================== state ===================== */
+const KEY = "pyquest.v1";
+const RANKS = [[0,"Hatchling"],[80,"Coiler"],[200,"Scripter"],[380,"Pythonista"],[600,"Serpent Sage"],[880,"Code Wizard"],[1200,"Python Legend"]];
+const DIFFS = [
+ {id:"beginner", label:"Beginner", hearts:5, hints:true, hintCost:0, revealAfter:1, typed:false, strip:false, mult:1,
+  desc:"5 hearts per level, free hints, and the answer appears after one miss."},
+ {id:"intermediate", label:"Intermediate", hearts:3, hints:true, hintCost:5, revealAfter:2, typed:false, strip:false, mult:1.5,
+  desc:"3 hearts, hints cost 5 XP, answer after two misses. Earns 1.5× XP."},
+ {id:"expert", label:"Expert", hearts:2, hints:false, hintCost:0, revealAfter:Infinity, typed:true, strip:true, mult:2,
+  desc:"2 hearts, no hints, no answers. Type the output yourself, and starter code has no comments. Earns 2× XP."}
+];
+const BADGES = [
+ {id:"first",  name:"First Words", desc:"Finish your first level", m:"1"},
+ {id:"flawless",name:"Flawless", desc:"Finish a level without losing a heart", m:"3★"},
+ {id:"debug",  name:"Bug Squasher", desc:"Pass a code challenge after a failed check", m:"BUG"},
+ {id:"w0",     name:"Hatched", desc:"Clear The Hatchery", m:"W1"},
+ {id:"w1",     name:"Decider", desc:"Clear Fork in the Path", m:"W2"},
+ {id:"w2",     name:"Cave Diver", desc:"Clear Loop Caves", m:"W3"},
+ {id:"boss",   name:"Serpent Slayer", desc:"Defeat the Vowel Serpent", m:"BOSS"},
+ {id:"w3",     name:"Forge Master", desc:"Clear Function Forge", m:"W4"},
+ {id:"mirror", name:"Mirror Breaker", desc:"Defeat the Mirror Merchant", m:"BOSS"},
+ {id:"w4",     name:"Sharp Slicer", desc:"Clear Slice Market", m:"W5"},
+ {id:"gremlin",name:"Bug Hunter", desc:"Defeat the Swamp Gremlin", m:"BOSS"},
+ {id:"w5",     name:"Swamp Survivor", desc:"Clear Error Swamp", m:"W6"},
+ {id:"king",   name:"Crown of Python", desc:"Defeat the Python King and clear every world", m:"KING"},
+ {id:"streak3",name:"On a Roll", desc:"Play 3 days in a row", m:"3D"},
+ {id:"practice5",name:"Sharpened", desc:"Finish 5 practice rounds", m:"P5"},
+ {id:"combo8", name:"Hot Hands", desc:"Get 8 answers in a row right in practice", m:"×8"},
+ {id:"ironwill",name:"Iron Will", desc:"Defeat any boss on Expert", m:"EXP"},
+ {id:"grandmaster",name:"Grandmaster", desc:"Clear every level on Expert", m:"GM"}
+];
+function fresh(){ return {xp:0, done:{}, best:{}, miss:{}, badges:[], streak:0, last:null, diff:1, practiced:0}; }
+let S = fresh();
+try{ const raw = localStorage.getItem(KEY); if(raw){ const old=JSON.parse(raw); S = Object.assign(fresh(), old);
+  if(!old.best){ Object.keys(S.done).forEach(id=>S.best[id]=1); } } }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+const D = () => DIFFS[S.diff] || DIFFS[1];
+function dstr(d){ return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+function touchStreak(){
+  const t=dstr(new Date()); if(S.last===t) return;
+  S.streak = (S.last===dstr(new Date(Date.now()-864e5))) ? S.streak+1 : 1; S.last=t;
+}
+let freshBadges=[];
+function award(id){ if(!S.badges.includes(id)){ S.badges.push(id); freshBadges.push(id); } }
+function rankOf(xp){ let i=0; for(let k=0;k<RANKS.length;k++) if(xp>=RANKS[k][0]) i=k; return i; }
+function unlocked(idx){ return idx===0 || S.done[LEVELS[idx-1].id]!==undefined; }
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* ===================== icons ===================== */
+const I = {
+ bolt:`<svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="var(--yellow)" stroke="#B98A00" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
+ flame:`<svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z" fill="#F07A2E"/></svg>`,
+ star:(on)=>`<svg viewBox="0 0 24 24"><path class="${on?'star-on':'star-off'}" stroke-width="1.2" d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>`,
+ heart:(on)=>`<svg viewBox="0 0 24 24"><path class="${on?'heart-on':'heart-off'}" d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>`,
+ lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>`,
+ play:`<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>`,
+ check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>`,
+ skull:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8c0 2.8 1.4 4.6 3 5.6V19a1 1 0 0 0 1 1h1v-2h2v2h2v-2h2v2h1a1 1 0 0 0 1-1v-3.4c1.6-1 3-2.8 3-5.6a8 8 0 0 0-8-8zm-3 10a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>`,
+ x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
+ android:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.08c-1.77 0-3.43.39-4.92 1.06L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>`,
+ download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>`,
+ dumbbell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12"/></svg>`,
+ snake:`<svg viewBox="0 0 40 40" width="34" height="34"><path d="M8 30c0-6 6-6 12-6s12 0 12-6-6-6-10-6" fill="none" stroke="var(--blue)" stroke-width="6" stroke-linecap="round"/><circle cx="22" cy="12" r="5.5" fill="var(--yellow)"/><circle cx="23.5" cy="10.8" r="1.3" fill="#162033"/></svg>`
+};
+
+/* ===================== tiny syntax highlighter ===================== */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function hl(src){
+  return src.split("\n").map(line=>{
+    let out="", i=0;
+    const kw=/^(def|return|if|elif|else|for|while|in|and|or|not|True|False|None|print|len|range|class|self|try|except|pass|int|str)\b/;
+    while(i<line.length){
+      const rest=line.slice(i);
+      if(rest[0]==="#"){ out+=`<span class="c">${esc(rest)}</span>`; break; }
+      let m = rest.match(/^f?("[^"]*"|'[^']*')/);
+      if(m){ out+=`<span class="s">${esc(m[0])}</span>`; i+=m[0].length; continue; }
+      if(/[A-Za-z_]/.test(rest[0]) && (i===0 || !/[A-Za-z0-9_]/.test(line[i-1]))){
+        m = rest.match(kw); if(m){ out+=`<span class="k">${m[0]}</span>`; i+=m[0].length; continue; }
+        m = rest.match(/^[A-Za-z_]\w*/); out+=m[0]; i+=m[0].length; continue;
+      }
+      out+=esc(rest[0]); i++;
+    }
+    return out;
+  }).join("\n");
+}
+
+/* ===================== Python engine (Skulpt) ===================== */
+let engine = "loading"; const waiters=[];
+function engineSettled(state){ engine=state; document.querySelectorAll(".engine").forEach(e=>e.textContent=state==="ready"?"":"The Python engine couldn't load. Check your connection and reload."); waiters.splice(0).forEach(w=>w(state)); }
+function whenEngine(){ return engine!=="loading" ? Promise.resolve(engine) : new Promise(r=>waiters.push(r)); }
+(function loadEngine(){
+  const a=document.createElement("script");
+  a.src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js";
+  a.onload=()=>{ const b=document.createElement("script");
+    b.src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js";
+    b.onload=()=>engineSettled("ready"); b.onerror=()=>engineSettled("failed"); document.head.appendChild(b); };
+  a.onerror=()=>engineSettled("failed");
+  document.head.appendChild(a);
+})();
+function friendly(msg){
+  const m = String(msg);
+  const line = (m.match(/on line (\d+)/)||[])[1];
+  const at = line ? ` (line ${line})` : "";
+  if(/TimeLimitError/.test(m)) return "Your code ran too long. Is there a loop that never ends?";
+  if(/IndentationError|expected an indented block|unindent/i.test(m)) return `Indentation is off${at}. Code inside if, for, while, def or class needs 4 spaces in front.`;
+  if(/SyntaxError|ParseError|bad input|bad token|EOF/.test(m)) return `Python couldn't read a line${at}. Look for a missing colon, bracket or quote.`;
+  if(/NameError/.test(m)){ const n=(m.match(/name '(\w+)'/)||[])[1]; return `Python doesn't know the name ${n?`"${n}"`:""}${at}. Check the spelling, or put text in quotes.`; }
+  if(/AssertionError/.test(m)){ const t=m.replace(/^AssertionError:?\s*/,"").replace(/ on line \d+$/,""); return t ? `Test failed: ${t}.` : "A hidden test failed."; }
+  if(/TypeError/.test(m)) return `You mixed types that don't fit together${at}, like text + a number. ${m.replace(/ on line \d+$/,"")}`;
+  if(/IndexError/.test(m)) return `That list position doesn't exist${at}. Remember positions start at 0.`;
+  if(/KeyError/.test(m)) return `That key isn't in the dictionary${at}. Check the spelling and quotes.`;
+  if(/ZeroDivisionError/.test(m)) return `You divided by zero${at}. Python can't do that.`;
+  if(/AttributeError/.test(m)) return `That object doesn't have what you asked for${at}. Check the name after the dot, and that you stored it with self. ${m.replace(/ on line \d+$/,"")}`;
+  return m;
+}
+async function runPy(code){
+  if(engine!=="ready") return {ok:false, out:"", err: engine==="failed" ? "The Python engine couldn't load. Check your internet connection and reload." : "Python is still loading. Try again in a moment."};
+  let out="";
+  Sk.configure({output:t=>{out+=t;}, __future__:Sk.python3, execLimit:3000,
+    read:x=>{ if(Sk.builtinFiles && Sk.builtinFiles.files[x]!==undefined) return Sk.builtinFiles.files[x]; throw "File not found: "+x; }});
+  try{ await Sk.misceval.asyncToPromise(()=>Sk.importMainWithBody("<stdin>",false,code,true)); return {ok:true,out,err:null}; }
+  catch(e){ return {ok:false,out,err:friendly(e.toString())}; }
+}
+const norm = s => String(s).replace(/\r/g,"").split("\n").map(l=>l.replace(/\s+$/,"")).join("\n").trim();
+const loose = s => norm(s).replace(/\s+/g,"").replace(/"/g,"'").toLowerCase();
+const stripComments = s => s.split("\n").map(l=>l.replace(/#.*$/,"")).join("\n");
+const expertStarter = s => s.split("\n").filter(l=>!/^\s*#/.test(l)).map(l=>l.replace(/\s+#.*$/,"")).join("\n").replace(/\n{3,}/g,"\n\n");
+
+/* ===================== practice question generators =====================
+   Each returns {code, wrong:[python code that models a common mistake], lit:[literal wrong answers], why}.
+   Answers are computed by actually running the code, so they're always right. */
+const WORDS = ["python","serpent","dragon","castle","wizard","rocket","jungle","treasure","pixel","lantern"];
+const GEN = {
+ hello:()=>{ const a=pick(WORDS),b=pick(WORDS.filter(x=>x!==a)); return pick([
+   {code:`print("${a}" + "${b}")`, lit:[`${a} + ${b}`,`${a} ${b}`,`"${a}${b}"`], why:"+ joins text with no space between the pieces."},
+   {code:`print("${a}", "${b}")`, lit:[`${a}${b}`,`${a}, ${b}`,`"${a}" "${b}"`], why:"A comma inside print puts a space between the values."},
+   {code:`print("${a}")\nprint("${b}")`, lit:[`${a} ${b}`,`${a}${b}`,`${b}\n${a}`], why:"Each print starts on a new line, top to bottom."}]); },
+ vars:()=>{ const a=ri(2,9),b=ri(1,6),c=ri(2,4); return {code:`x = ${a}\nx = x + ${b}\nx = x * ${c}\nprint(x)`,
+   wrong:[`print(${a} + ${b} * ${c})`,`print(${a} * ${c} + ${b})`,`print(${a} + ${b})`], why:`x becomes ${a} + ${b} = ${a+b}, then that is multiplied by ${c}.`}; },
+ math:()=>{ const a=ri(9,40),b=ri(2,7); const op=pick(["//","%","/"]); const others=["//","%","/","*"].filter(o=>o!==op);
+   return {code:`print(${a} ${op} ${b})`, wrong:others.map(o=>`print(${a} ${o} ${b})`),
+   why: op==="//"?"// divides and drops the remainder.":op==="%"?"% gives the remainder after dividing.":"/ always gives a decimal answer."}; },
+ strings:()=>{ const w=pick(WORDS); const i=ri(0,w.length-2); return pick([
+   {code:`print(len("${w}"))`, wrong:[`print(len("${w}") + 1)`,`print(len("${w}") - 1)`], lit:[w], why:`Count the characters in "${w}".`},
+   {code:`w = "${w}"\nprint(w[${i}])`, wrong:[`print("${w}"[${i+1}])`, ...(i>0?[`print("${w}"[${i-1}])`]:[]), `print("${w}"[${i}:${i+2}])`], why:`Positions start at 0, so w[${i}] is character number ${i+1}.`},
+   {code:`print("${w}".upper()[:2] + "${w}"[-1])`, wrong:[`print("${w}"[:2] + "${w}"[-1])`,`print("${w}".upper()[:3])`], lit:[], why:"upper() capitalises, [:2] takes two characters and [-1] the last one."}]); },
+ bools:()=>{ const a=ri(1,12),b=ri(1,12),c=ri(1,12); return {code:`a = ${a}\nb = ${b}\nprint(a > b or a == ${c})`, wrong:[`print(not (${a} > ${b} or ${a} == ${c}))`], lit:["a > b","None"], why:`or is True if either side is True. ${a} > ${b} is ${a>b?"True":"False"}.`}; },
+ ifelse:()=>{ const n=ri(-5,15); return {code:`n = ${n}\nif n > 10:\n    print("big")\nelse:\n    print("small")`, lit:["big","small","big\nsmall"], why:`${n} > 10 is ${n>10?"True":"False"}.`}; },
+ elif:()=>{ const n=ri(-6,16); return {code:`n = ${n}\nif n > 10:\n    print("high")\nelif n > 0:\n    print("mid")\nelse:\n    print("low")`, lit:["high","mid","low","mid\nlow"], why:"Python runs only the first branch whose condition is True."}; },
+ for:()=>{ const a=ri(0,3),b=a+ri(2,4); return {code:`total = 0\nfor i in range(${a}, ${b}):\n    total += i\nprint(total)`,
+   wrong:[`print(sum(range(${a}, ${b+1})))`,`print(sum(range(${a+1}, ${b+1})))`,`print(${b})`], why:`range(${a}, ${b}) stops before ${b}.`}; },
+ lists:()=>{ const items=shuffle(WORDS).slice(0,4); const i=pick([0,1,2,3,-1,-2]); return {code:`items = ${JSON.stringify(items).replace(/,/g,", ")}\nprint(items[${i}])`,
+   lit:items, why: i<0?"Negative positions count back from the end: -1 is the last item.":"Positions start at 0."}; },
+ totals:()=>{ const n=ri(9,16),s=ri(2,4),t=ri(0,3); return {code:`n = ${n}\nwhile n > ${t}:\n    n = n - ${s}\nprint(n)`,
+   wrong:[`n = ${n}\nwhile n >= ${t}:\n    n = n - ${s}\nprint(n)`,`n = ${n}\nwhile n > ${t}:\n    n = n - ${s}\nprint(n + ${s})`,`print(${t})`], why:`The loop keeps subtracting ${s} until n is no longer greater than ${t}.`}; },
+ funcs:()=>{ const a=ri(2,5),b=ri(1,9),k=ri(2,6); return {code:`def f(n):\n    return n * ${a} + ${b}\n\nprint(f(${k}))`,
+   wrong:[`print(${k} * (${a} + ${b}))`,`print(${k} + ${a} * ${b})`,`print(${k} * ${a})`], why:`f(${k}) is ${k} * ${a} + ${b}.`}; },
+ dicts:()=>{ const x=ri(1,9),y=ri(1,9),z=ri(1,9); return {code:`d = {"a": ${x}, "b": ${y}}\nd["a"] += d["b"]\nd["c"] = d.get("c", 0) + ${z}\nprint(d["a"] + d["c"])`,
+   wrong:[`print(${x} + ${z})`,`print(${x} + ${y})`,`print(${x} + ${y} + ${y} + ${z})`], why:`d["a"] becomes ${x+y}. "c" didn't exist, so get gives 0 and d["c"] is ${z}.`}; },
+ slices:()=>{ const w=pick(WORDS); const a=ri(0,2),b=a+ri(2,3); return pick([
+   {code:`w = "${w}"\nprint(w[${a}:${b}])`, wrong:[`print("${w}"[${a}:${b+1}])`,`print("${w}"[${a+1}:${b+1}])`,`print("${w}"[:${b}])`], why:`The slice starts at ${a} and stops before ${b}.`},
+   {code:`w = "${w}"\nprint(w[::-1][:3])`, wrong:[`print("${w}"[:3])`,`print("${w}"[-3:])`,`print("${w}"[:3][::-1])`], why:"Reverse first, then take the first three characters."}]); },
+ split:()=>{ const s=pick(["red green blue","one two three four","a b c d e","sun moon"]); const sep=pick(["-","+","/"]); return pick([
+   {code:`print(len("${s}".split()))`, wrong:[`print(len("${s}".split()) + 1)`,`print(len("${s}"))`], why:"split() makes a list of the words."},
+   {code:`print("${sep}".join("${s}".split()))`, wrong:[`print("${s}")`,`print("${s}".replace(" ", ""))`,`print("${sep}".join("${s}"))`], why:"split makes a list of words, then join glues them with the separator."}]); },
+ clean:()=>{ const w=pick(["banana","balloon","coffee","pepper","bubble"]); const ch=pick([...new Set(w.split(""))]); return {code:`print("${w}".replace("${ch}", "*").upper())`,
+   wrong:[`print("${w}".replace("${ch}", "*", 1).upper())`,`print("${w}".replace("${ch}", "*"))`,`print("${w}".upper())`], why:`replace swaps every "${ch}", then upper() capitalises the rest.`}; },
+ types:()=>{ const a=ri(1,9),b=ri(1,9); return pick([
+   {code:`print("${a}" + "${b}")`, wrong:[`print(${a} + ${b})`], lit:[`"${a}${b}"`,"An error"], why:"Both are text, so + joins them."},
+   {code:`print(int("${a}") + ${b})`, wrong:[`print("${a}" + "${b}")`], lit:[`${a} + ${b}`,"An error"], why:"int() turns the text into a number first, so they add."},
+   {code:`print(str(${a}) * ${Math.min(b,3)})`, wrong:[`print(${a} * ${Math.min(b,3)})`], lit:["An error"], why:"Text times a number repeats the text."}]); },
+ tryexcept:()=>{ const t=pick(["12","x9","7","3.5","ten","40"]); return {code:`try:\n    n = int("${t}")\n    print(n * 2)\nexcept ValueError:\n    print("bad")`,
+   wrong:[`print("${t}${t}")`], lit:["bad","An error"], why: /^\d+$/.test(t)?`"${t}" is a valid whole number, so no error happens.`:`int("${t}") fails with ValueError, so except runs.`}; },
+ comprehension:()=>{ const k=ri(2,4),m=ri(4,7),p=ri(0,1); return {code:`print([n * ${k} for n in range(${m}) if n % 2 == ${p}])`,
+   wrong:[`print([n * ${k} for n in range(${m})])`,`print([n * ${k} for n in range(${m}) if n % 2 == ${1-p}])`,`print([n for n in range(${m}) if n % 2 == ${p}])`], why:`Keep the ${p?"odd":"even"} numbers below ${m}, then multiply each by ${k}.`}; },
+ classes:()=>{ const a=ri(0,5),b=ri(1,6),c=ri(1,6); return {code:`class Box:\n    def __init__(self):\n        self.v = ${a}\n    def add(self, x):\n        self.v += x\n\nb = Box()\nb.add(${b})\nb.add(${c})\nprint(b.v)`,
+   wrong:[`print(${b} + ${c})`,`print(${a} + ${c})`,`print(${a})`], why:`v starts at ${a}, then grows by ${b} and ${c}.`}; }
+};
+GEN.methods = GEN.classes;
+
+/* ===================== rendering helpers ===================== */
+const app = document.getElementById("app");
+function toast(t){ const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2400); }
+
+let apkState = "unknown", apkSize = "";
+async function checkApk(){
+  if(IN_APP || apkState!=="unknown") return;
+  if(/^https?:/i.test(APK_URL)){ apkState="ok"; return; }   // can't probe other sites; trust the link
+  try{
+    const r = await fetch(APK_URL, {method:"HEAD", cache:"no-store"});
+    const type = r.headers.get("content-type")||"";
+    apkState = r.ok && !/text\/html/.test(type) ? "ok" : "missing";
+    const n = +r.headers.get("content-length"); if(n) apkSize = (n/1048576).toFixed(1)+" MB";
+  }catch(e){ apkState="missing"; }
+  if(!run) renderMap();
+}
+function renderMap(){
+  run = null;
+  const r = rankOf(S.xp), next = RANKS[r+1];
+  const pct = next ? Math.round((S.xp-RANKS[r][0])/(next[0]-RANKS[r][0])*100) : 100;
+  const curIdx = LEVELS.findIndex((l,i)=>unlocked(i) && S.done[l.id]===undefined);
+  const cleared = LEVELS.filter(l=>S.done[l.id]!==undefined);
+  const weak = cleared.filter(l=>(S.miss[l.id]||0)>0).sort((a,b)=>S.miss[b.id]-S.miss[a.id]).slice(0,3);
+  let h = `<header class="topbar">
+    <div class="logo">${I.snake}<div>Python <span>Quest</span></div></div>
+    <div class="stats"><span class="chip" title="Day streak">${I.flame}${S.streak}</span><span class="chip" title="Experience points">${I.bolt}${S.xp} XP</span></div>
+  </header>
+  <section class="rank" aria-label="Your rank">
+    <div class="rank-row"><span class="rank-title">${RANKS[r][1]}</span><span class="rank-sub">${next ? `${next[0]-S.xp} XP to ${next[1]}` : "Top rank reached"}</span></div>
+    <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+  </section>
+  <div class="hub">
+    <section class="panel" aria-labelledby="diffLabel">
+      <h3 class="section-label" id="diffLabel">Difficulty</h3>
+      <div class="seg" role="radiogroup" aria-labelledby="diffLabel">${DIFFS.map((d,k)=>`<button role="radio" aria-checked="${k===S.diff}" class="${k===S.diff?'on':''} d${k}" data-d="${k}">${d.label}</button>`).join("")}</div>
+      <p class="panel-note">${D().desc}</p>
+    </section>
+    <section class="panel practice ${cleared.length?'':'locked'}" aria-labelledby="prLabel">
+      <div class="pr-head"><span class="pr-icon">${I.dumbbell}</span><div><h3 class="pr-title" id="prLabel">Practice Arena</h3>
+        <p class="panel-note">${cleared.length ? `8 fresh questions from the ${cleared.length} level${cleared.length>1?"s":""} you've cleared. Build a combo for bonus XP.` : "Clear your first level to unlock practice."}</p></div></div>
+      ${weak.length?`<p class="weak">Focusing on: ${weak.map(l=>`<span>${l.title}</span>`).join("")}</p>`:""}
+      <button class="cta blue" id="practice" ${cleared.length?"":"disabled"}>Start practice</button>
+    </section>
+  </div>
+  ${IN_APP ? "" : `<section class="appcard" aria-labelledby="appLabel">
+    <span class="pr-icon">${I.android}</span>
+    <div class="appcard-text"><h3 class="pr-title" id="appLabel">Python Quest for Android</h3>
+      <p class="panel-note" id="apkNote">${apkState==="missing"?"The Android app is on its way. Check back soon.":`Play on your phone, even offline.${apkSize?` Free, ${apkSize}.`:" Free."} When Android asks, allow installs from your browser.`}</p></div>
+    ${apkState==="missing" ? `<span class="btn" aria-disabled="true">Coming soon</span>` : `<a class="btn run" id="apkLink" href="${esc(APK_URL)}" download="python-quest.apk" rel="noopener">${I.download} Download APK</a>`}
+  </section>`}`;
+  WORLDS.forEach((w,wi)=>{
+    const lvls = LEVELS.map((l,i)=>[l,i]).filter(([l])=>l.world===wi);
+    const wLocked = !unlocked(lvls[0][1]);
+    h += `<section class="world ${wLocked?'locked':''}"><div class="world-head"><div><div class="world-num">WORLD ${wi+1}</div><div class="world-name">${w.name}</div><div class="world-desc">${w.desc}</div></div></div><div class="trail">`;
+    lvls.forEach(([l,i],k)=>{
+      const done = S.done[l.id]!==undefined, open = unlocked(i), cur = i===curIdx;
+      const off = [0,46,92,46][k%4];
+      const icon = !open ? I.lock : l.boss ? I.skull : done ? I.check : I.play;
+      const best = S.best[l.id];
+      h += `<div class="node-row" style="padding-left:min(${off}px, 12vw)">
+        <button class="node ${done?'done':''} ${!open?'locked':''} ${l.boss?'boss':''} ${cur?'current':''}" data-lv="${i}" aria-label="${esc(l.title)}${open?'':' (locked)'}" ${open?'':'aria-disabled="true"'}>${icon}</button>
+        <div class="node-label"><b>${l.title}</b><small>${l.blurb}</small>${done?`<div class="meta"><span class="stars">${[1,2,3].map(s=>I.star(s<=S.done[l.id])).join("")}</span>${best!==undefined?`<span class="tag d${best}">${DIFFS[best].label}</span>`:""}</div>`:""}</div></div>`;
+    });
+    h += `</div></section>`;
+  });
+  h += `<section class="badges"><h3 class="section-label">Trophy shelf · ${S.badges.length}/${BADGES.length}</h3><div class="badge-grid">
+    ${BADGES.map(b=>`<div class="badge ${S.badges.includes(b.id)?'':'off'}"><div class="medal">${b.m}</div><b>${b.name}</b><small>${b.desc}</small></div>`).join("")}
+  </div></section>
+  <div class="footer-note"><span>Progress is saved in this browser.</span><span id="resetArea"><button class="linkbtn" id="reset">Reset progress</button></span></div>`;
+  app.innerHTML = h;
+  app.querySelectorAll(".node").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.lv; if(!unlocked(i)){ toast("Finish the level before this one to unlock it"); return; } startLevel(i);
+  });
+  app.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{ S.diff=+b.dataset.d; save(); renderMap(); toast(`Difficulty set to ${D().label}`); });
+  document.getElementById("practice").onclick=startPractice;
+  document.getElementById("reset").onclick=()=>{
+    document.getElementById("resetArea").innerHTML=`Erase all XP and stars? <button class="linkbtn" id="yes">Erase</button> · <button class="linkbtn" id="no">Keep</button>`;
+    document.getElementById("yes").onclick=()=>{ S=fresh(); save(); renderMap(); toast("Progress erased"); };
+    document.getElementById("no").onclick=renderMap;
+  };
+}
+
+/* ===================== runs (levels and practice) ===================== */
+let run = null;
+function newRun(extra){
+  const d=D();
+  run = Object.assign({diff:S.diff, d, step:0, hearts:d.hearts, xp:0, combo:0, bestCombo:0, correct:0, answered:0}, extra);
+  freshBadges=[]; resetStepState();
+}
+function startLevel(i){
+  const lv=LEVELS[i];
+  newRun({kind:"level", i, lv, title:lv.title, step:-1, steps:lv.steps.map(s=>Object.assign({from:lv.id}, s))});
+  renderStep(); window.scrollTo(0,0);
+}
+function weightedLevel(pool){
+  const w = pool.map(l=>1+2*Math.min(S.miss[l.id]||0,4)); let t=w.reduce((a,b)=>a+b,0), r=Math.random()*t;
+  for(let k=0;k<pool.length;k++){ r-=w[k]; if(r<=0) return pool[k]; } return pool[pool.length-1];
+}
+async function genQuiz(lv){
+  for(let tries=0; tries<4; tries++){
+    const g = GEN[lv.id]();
+    const r = await runPy(g.code); if(!r.ok) continue;
+    const ans = norm(r.out);
+    const wrong = [];
+    for(const c of (g.wrong||[])){ const w=await runPy(c); if(w.ok) wrong.push(norm(w.out)); }
+    (g.lit||[]).forEach(x=>wrong.push(norm(x)));
+    const uniq=[...new Set(wrong)].filter(x=>x && x!==ans);
+    const opts = shuffle([ans, ...shuffle(uniq).slice(0,3)]);
+    if(opts.length<3) opts.push("An error");
+    if(opts.length<2) continue;
+    return {type:"quiz", from:lv.id, code:g.code, q:"What is printed?", options:opts, answer:opts.indexOf(ans), why:g.why||"Trace the code line by line.", generated:true};
+  }
+  return null;
+}
+async function startPractice(){
+  const pool = LEVELS.filter(l=>S.done[l.id]!==undefined);
+  if(!pool.length) return;
+  app.innerHTML = `<div class="level"><article class="card result"><div class="kicker">Practice Arena</div><h2>Shuffling questions</h2><p class="engine">${engine==="loading"?"Loading Python…":"Generating fresh questions…"}</p></article></div>`;
+  window.scrollTo(0,0);
+  if(await whenEngine()!=="ready"){ app.querySelector(".engine").textContent="The Python engine couldn't load, so practice questions can't be generated. Check your connection and reload."; return; }
+  const items=[], used=new Set();
+  const codePool = pool.flatMap(l=>l.steps.filter(s=>s.type==="code").map(s=>Object.assign({from:l.id}, s)));
+  const nCode = Math.min(S.diff===0?1:2, codePool.length);
+  for(let n=0; n<8-nCode; n++){
+    const lv = weightedLevel(pool); let q=null;
+    if(GEN[lv.id] && (Math.random()<0.75 || used.has(lv.id+":s"))) q = await genQuiz(lv);
+    if(!q && !used.has(lv.id+":s")){ used.add(lv.id+":s"); q = Object.assign({from:lv.id}, lv.steps.find(s=>s.type==="quiz")); }
+    if(!q){ const alt = pool.find(l=>GEN[l.id]) ; if(alt) q = await genQuiz(alt); }
+    if(q) items.push(q);
+  }
+  const codes=[]; const cw = codePool.map(s=>({s, w:1+2*Math.min(S.miss[s.from]||0,4)}));
+  while(codes.length<nCode && cw.length){ let t=cw.reduce((a,b)=>a+b.w,0), r=Math.random()*t, k=0; for(;k<cw.length;k++){ r-=cw[k].w; if(r<=0) break; } codes.push(cw.splice(Math.min(k,cw.length-1),1)[0].s); }
+  const steps = shuffle(items);
+  codes.forEach((c,k)=>steps.splice(Math.min(steps.length, 3+k*3), 0, c));
+  newRun({kind:"practice", title:"Practice Arena", steps});
+  renderStep(); window.scrollTo(0,0);
+}
+function resetStepState(){ if(!run) return; run.state="idle"; run.sel=null; run.failed=false; run.hintUsed=false; run.fails=0; run.revealed=false; run.draft=undefined; run.typed=""; }
+
+function heartsHTML(){ return Array.from({length:run.d.hearts},(_,k)=>I.heart(k<run.hearts)).join(""); }
+function topRight(){
+  if(run.kind==="practice") return `<span class="combo ${run.combo>=3?'hot':''}" id="combo" aria-label="Combo ${run.combo}">×${run.combo}</span>`;
+  return `<div class="hearts" id="hearts" aria-label="${run.hearts} hearts left">${heartsHTML()}</div>`;
+}
+function lvTop(){
+  const n = run.steps.length + (run.kind==="level"?1:0);
+  const done = run.step + (run.kind==="level"?1:0);
+  const pct = Math.round(done/n*100);
+  return `<div class="lv-top"><button class="iconbtn" id="quit" aria-label="Back to map">${I.x}</button>
+    <div class="bar"><i style="width:${pct}%"></i></div><span class="tag d${run.diff}">${run.d.label}</span>${topRight()}</div>`;
+}
+function wire(){ document.getElementById("quit").onclick=renderMap; }
+
+function renderStep(){
+  if(run.kind==="level" && run.step===-1){
+    const lv=run.lv;
+    app.innerHTML = `<div class="level">${lvTop()}
+      <article class="card"><div class="kicker">${WORLDS[lv.world].name} · Lesson</div><h2>${lv.title}</h2>${lv.lesson}
+        <pre class="code">${hl(lv.example)}</pre>
+        <div class="tools"><button class="btn run" id="tryEx">${I.play} Run this example</button></div>
+        <div class="outlabel">Output</div><pre class="console" id="exOut">Press run to see what it does.</pre>
+        <div class="engine">${engine==="loading"?"Python engine loading…":engine==="failed"?"The Python engine couldn't load. Check your connection and reload.":""}</div>
+      </article>
+      <div class="actionbar"><button class="cta blue" id="go">Start challenges</button></div></div>`;
+    wire();
+    document.getElementById("tryEx").onclick=async()=>{ const o=document.getElementById("exOut"); o.textContent="Running…"; const r=await runPy(lv.example); o.classList.toggle("err",!r.ok); o.textContent=(r.out||"")+(r.err?(r.out?"\n":"")+r.err:"") || "(no output)"; };
+    document.getElementById("go").onclick=()=>{ run.step=0; resetStepState(); renderStep(); window.scrollTo(0,0); };
+    return;
+  }
+  if(run.step>=run.steps.length){ return run.kind==="level" ? renderLevelResult() : renderPracticeResult(); }
+  const st=run.steps[run.step];
+  if(st.type==="quiz") renderQuiz(st); else renderCode(st);
+}
+function nextStep(){ run.step++; resetStepState(); renderStep(); window.scrollTo(0,0); }
+function source(st){ const l=LEVELS.find(x=>x.id===st.from); return run.kind==="practice" && l ? ` · from ${l.title}` : ""; }
+
+/* outcome bookkeeping shared by quizzes and code */
+function recordOutcome(ok, st, firstTry){
+  if(ok){
+    if(run.kind==="practice"){
+      if(firstTry){ run.combo++; run.correct++; run.bestCombo=Math.max(run.bestCombo,run.combo); }
+      S.miss[st.from]=Math.max(0,(S.miss[st.from]||0)-1);
+    }
+  } else {
+    S.miss[st.from]=(S.miss[st.from]||0)+1;
+    if(run.kind==="practice"){ run.combo=0; } else { loseHeart(); }
+  }
+  const c=document.getElementById("combo"); if(c){ c.textContent="×"+run.combo; c.classList.toggle("hot",run.combo>=3); c.classList.remove("bump"); void c.offsetWidth; if(ok) c.classList.add("bump"); }
+  save();
+}
+function quizPoints(){ return run.kind==="practice" ? 5*Math.min(Math.max(run.combo,1),5) : 10; }
+
+function renderQuiz(st){
+  const typed = run.d.typed;
+  const ans = st.options[st.answer];
+  const multi = ans.includes("\n");
+  app.innerHTML = `<div class="level">${lvTop()}
+    <article class="card"><div class="kicker">${typed?"Type the output":"Predict the output"}${source(st)}</div><h2>${typed?"What exactly does this print?":esc(st.q)}</h2>
+      <pre class="code">${hl(st.code)}</pre>
+      ${typed ? `<label class="outlabel" for="typed">Your answer${multi?" (one line per print)":""}</label>
+        ${multi?`<textarea id="typed" class="typed" rows="${ans.split("\n").length}" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>`:`<input id="typed" class="typed" spellcheck="false" autocapitalize="off" autocomplete="off" enterkeyhint="done">`}`
+      : `<div class="options" role="radiogroup">${st.options.map((o,k)=>`<button class="opt" role="radio" aria-checked="false" data-k="${k}"><kbd>${k+1}</kbd><span>${esc(o)}</span></button>`).join("")}</div>`}
+    </article>
+    <div class="actionbar" id="ab"></div></div>`;
+  wire();
+  const ab=document.getElementById("ab");
+  const drawBar=()=>{ ab.innerHTML=`<button class="cta" id="chk" ${(typed?!run.typed.trim():run.sel===null)?"disabled":""}>Check</button>`; document.getElementById("chk").onclick=checkQuiz; };
+  const opts=[...app.querySelectorAll(".opt")];
+  opts.forEach(b=>b.onclick=()=>{ if(run.state!=="idle") return; run.sel=+b.dataset.k; opts.forEach(o=>{o.classList.toggle("sel",o===b); o.setAttribute("aria-checked",o===b);}); drawBar(); });
+  const inp=document.getElementById("typed");
+  if(inp){
+    inp.oninput=()=>{ run.typed=inp.value; const c=document.getElementById("chk"); if(c) c.disabled=!inp.value.trim(); };
+    inp.onkeydown=e=>{ if(e.key==="Enter" && (!multi || e.ctrlKey || e.metaKey)){ e.preventDefault(); if(inp.value.trim() && run.state==="idle") checkQuiz(); } };
+    setTimeout(()=>inp.focus({preventScroll:true}),50);
+  }
+  function checkQuiz(){
+    if(run.state!=="idle") return;
+    let ok;
+    if(typed){ ok = norm(run.typed)===norm(ans) || loose(run.typed)===loose(ans); inp.disabled=true; inp.classList.add(ok?"right":"wrong"); }
+    else { if(run.sel===null) return; ok = run.sel===st.answer;
+      opts.forEach((o,k)=>{ o.disabled=true; if(k===st.answer) o.classList.add("right"); else if(k===run.sel) o.classList.add("wrong"); }); }
+    recordOutcome(ok, st, true);
+    let pts=0; if(ok){ pts=quizPoints(); run.xp+=pts; }
+    const shown = Math.round(pts*run.d.mult);
+    const title = ok ? (run.kind==="practice" && run.combo>=2 ? `Combo ×${run.combo}! +${shown} XP` : `Correct! +${shown} XP`) : "Not quite";
+    const body = (!ok && typed ? `The output is:\n${ans}\n\n` : "") + st.why;
+    showFeedback(ok, title, body, false);
+  }
+  drawBar();
+  run._quizKeys = e=>{ if(!typed && run.state==="idle" && /^[1-4]$/.test(e.key) && document.activeElement.tagName!=="TEXTAREA"){ opts[+e.key-1]?.click(); } };
+}
+document.addEventListener("keydown",e=>{ if(run && run._quizKeys && run.steps[run.step]?.type==="quiz") run._quizKeys(e); });
+
+function renderCode(st){
+  const d=run.d;
+  const starter = d.strip ? expertStarter(st.starter) : st.starter;
+  const keys=["Tab","(",")",":","\"","'","=","[","]","{","}","+","<",">","#","."];
+  app.innerHTML = `<div class="level">${lvTop()}
+    <article class="card"><div class="kicker">Code challenge${run.lv&&run.lv.boss?" · Boss fight":""}${source(st)}</div><h2 class="prompt">${st.prompt}</h2>
+      <div class="editor-wrap"><textarea class="editor" id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Python code editor"></textarea>
+        <div class="keys" aria-label="Symbol keys">${keys.map(k=>`<button data-key="${esc(k)}" tabindex="-1">${esc(k)}</button>`).join("")}</div></div>
+      <div class="tools"><button class="btn run" id="runBtn">${I.play} Run</button>${d.hints?`<button class="btn" id="hintBtn">Hint${d.hintCost?` (−${d.hintCost} XP)`:""}</button>`:""}<button class="btn" id="resetBtn">Start over</button></div>
+      <div id="hint">${run.hintUsed?`<div class="hintbox"><b>Hint:</b> <span class="mono">${esc(st.hint)}</span></div>`:""}</div>
+      <div class="outlabel">Output</div><pre class="console" id="out">Run your code to test it. Running is free; ${run.kind==="practice"?"a wrong check resets your combo":"a wrong check costs a heart"}.</pre>
+      <div class="engine">${engine==="loading"?"Python engine loading…":engine==="failed"?"The Python engine couldn't load. Check your connection and reload.":""}</div>
+    </article>
+    <div class="actionbar" id="ab"></div></div>`;
+  wire();
+  const ed=document.getElementById("ed");
+  ed.value = run.draft ?? starter;
+  const insert=(t)=>{ const s=ed.selectionStart,e=ed.selectionEnd; ed.setRangeText(t,s,e,"end"); ed.focus(); };
+  ed.addEventListener("keydown",e=>{
+    if(e.key==="Tab"){ e.preventDefault(); insert("    "); }
+    else if(e.key==="Enter" && !e.isComposing){
+      e.preventDefault();
+      const line=ed.value.slice(0,ed.selectionStart).split("\n").pop();
+      let ind=(line.match(/^\s*/)||[""])[0]; if(/:\s*$/.test(line)) ind+="    ";
+      insert("\n"+ind);
+    }
+  });
+  app.querySelectorAll(".keys button").forEach(b=>{ b.onmousedown=e=>e.preventDefault(); b.onclick=()=>insert(b.dataset.key==="Tab"?"    ":b.dataset.key); });
+  const out=document.getElementById("out");
+  const show=r=>{ out.classList.toggle("err",!r.ok); out.textContent=(r.out||"")+(r.err?(r.out?"\n":"")+r.err:"") || "(no output — did you print anything?)"; };
+  document.getElementById("runBtn").onclick=async()=>{ out.textContent="Running…"; show(await runPy(ed.value)); };
+  document.getElementById("resetBtn").onclick=()=>{ ed.value=starter; ed.focus(); };
+  const hb=document.getElementById("hintBtn");
+  if(hb) hb.onclick=()=>{
+    if(!run.hintUsed){ run.hintUsed=true; run.xp=Math.max(0,run.xp-d.hintCost); }
+    document.getElementById("hint").innerHTML=`<div class="hintbox"><b>Hint:</b> <span class="mono">${esc(st.hint)}</span></div>`;
+  };
+  const ab=document.getElementById("ab");
+  const drawBar=()=>{
+    ab.innerHTML = (run.fails>=d.revealAfter && !run.revealed ? `<button class="btn" id="reveal" style="margin-bottom:10px">Show the answer (no XP for this one)</button>` : "") + `<button class="cta" id="chk">Check</button>`;
+    document.getElementById("chk").onclick=check;
+    const rv=document.getElementById("reveal"); if(rv) rv.onclick=()=>{ run.revealed=true; ed.value=st.solution; drawBar(); toast("Answer loaded. Press Check to continue."); };
+  };
+  async function check(){
+    const code=ed.value;
+    if(engine!=="ready"){ show(await runPy(code)); return; }
+    const chk=document.getElementById("chk"); chk.disabled=true; chk.textContent="Checking…";
+    const clean=stripComments(code);
+    let msg=null;
+    if(st.requires){ for(const rq of st.requires){ if(!new RegExp(rq).test(clean)){ msg=st.requiresMsg; break; } } }
+    const r = await runPy(code);
+    show(r);
+    if(!msg && !r.ok) msg=r.err;
+    if(!msg && st.expect!==undefined && norm(r.out)!==norm(st.expect)) msg=`Expected the output to be:\n${st.expect}`;
+    if(!msg && st.test){ const t=await runPy(code+"\n\n"+st.test); if(!t.ok) msg=t.err; }
+    run.draft=code;
+    if(msg){
+      run.fails++;
+      if(run.revealed){ chk.disabled=false; chk.textContent="Check"; showFeedback(false,"Still not passing",msg,true); return; }
+      const first=!run.failed; run.failed=true;
+      if(run.kind==="level" || first) recordOutcome(false, st, first); else S.miss[st.from]=(S.miss[st.from]||0);
+      showFeedback(false,"Not yet",msg,true);
+    } else {
+      const firstTry=!run.failed;
+      recordOutcome(true, st, firstTry && !run.revealed);
+      let pts = run.revealed ? 0 : (run.kind==="practice" ? 15 + (firstTry?5*Math.min(run.combo,5):0) : 20);
+      if(run.failed && !run.revealed) award("debug");
+      run.xp+=pts;
+      const shown=Math.round(pts*d.mult);
+      showFeedback(true, shown ? `It works! +${shown} XP` : "It works!", run.hintUsed && shown && d.hintCost ? `Hint cost ${d.hintCost} XP.` : (run.revealed ? "Read through the answer and make sure each line makes sense." : "Nice clean code."), false);
+    }
+  }
+  drawBar();
+}
+function loseHeart(){
+  run.hearts=Math.max(0,run.hearts-1);
+  const h=document.getElementById("hearts"); if(h){ h.innerHTML=heartsHTML(); h.classList.remove("shake"); void h.offsetWidth; h.classList.add("shake"); }
+}
+function showFeedback(ok,title,body,retry){
+  run.state="feedback";
+  const ab=document.getElementById("ab");
+  const dead = !ok && run.kind==="level" && run.hearts===0;
+  ab.innerHTML=`<div class="feedback ${ok?'good':'bad'}" role="status"><b>${dead?"Out of hearts":esc(title)}</b><p style="white-space:pre-wrap">${esc(dead?"Review the lesson and try the level again. Your progress on other levels is safe.":body)}</p></div>
+    <button class="cta ${ok?'':'red'}" id="next">${dead?"Retry level":ok?"Continue":retry?"Try again":"Continue"}</button>`;
+  const nx=document.getElementById("next"); nx.focus({preventScroll:true});
+  nx.onclick=()=>{
+    if(dead){ startLevel(run.i); return; }
+    if(ok || !retry) nextStep();
+    else { run.state="idle"; renderStep(); }
+  };
+}
+
+/* ===================== results ===================== */
+function badgeLines(){ return freshBadges.map(id=>{const b=BADGES.find(x=>x.id===id);return `<div class="newbadge">New trophy: ${b.name}</div>`;}).join(""); }
+function renderLevelResult(){
+  const lv=run.lv, d=run.d;
+  const lost = d.hearts - run.hearts;
+  const stars = lost===0?3:lost===1?2:1;
+  const prevStars=S.done[lv.id], prevBest=S.best[lv.id];
+  const newBest = prevBest===undefined || run.diff>prevBest;
+  const base = newBest ? run.xp + stars*10 : Math.max(0, stars-(prevStars||0))*10;
+  const earned = Math.round(base*d.mult);
+  S.xp += earned;
+  S.done[lv.id] = Math.max(prevStars||0, stars);
+  S.best[lv.id] = Math.max(prevBest??-1, run.diff);
+  touchStreak(); if(S.streak>=3) award("streak3");
+  award("first");
+  if(stars===3) award("flawless");
+  WORLDS.forEach((w,wi)=>{ if(LEVELS.filter(l=>l.world===wi).every(l=>S.done[l.id]!==undefined) && BADGES.some(b=>b.id==="w"+wi)) award("w"+wi); });
+  if(lv.badge) award(lv.badge);
+  if(lv.boss && run.diff===2) award("ironwill");
+  if(LEVELS.every(l=>S.best[l.id]===2)) award("grandmaster");
+  save();
+  const nextIdx = run.i+1 < LEVELS.length ? run.i+1 : null;
+  app.innerHTML=`<div class="level"><article class="card result">
+    <div class="kicker">${lv.boss?"Boss defeated":"Level complete"} · ${d.label}</div>
+    <h2>${lv.title}</h2>
+    <div class="big-stars">${[1,2,3].map(s=>I.star(s<=stars)).join("")}</div>
+    <div class="tally"><div><b>+${earned}</b><small>XP earned</small></div><div><b>${run.hearts}/${d.hearts}</b><small>Hearts left</small></div><div><b>${S.streak}</b><small>Day streak</small></div></div>
+    <p>Rank: <b>${RANKS[rankOf(S.xp)][1]}</b> · ${S.xp} XP total${newBest?"":" · Replays on the same difficulty only earn XP for new stars"}</p>
+    ${badgeLines()}
+  </article>
+  <div class="actionbar">${nextIdx!==null?`<button class="cta" id="nextLv">Next level: ${LEVELS[nextIdx].title}</button><div style="height:10px"></div>`:""}<button class="cta blue" id="toMap">Back to map</button></div></div>`;
+  document.getElementById("toMap").onclick=()=>{ renderMap(); window.scrollTo(0,0); };
+  const nl=document.getElementById("nextLv"); if(nl) nl.onclick=()=>startLevel(nextIdx);
+  window.scrollTo(0,0);
+}
+function renderPracticeResult(){
+  const d=run.d, total=run.steps.length;
+  const earned=Math.round(run.xp*d.mult);
+  S.xp+=earned; S.practiced=(S.practiced||0)+1;
+  touchStreak(); if(S.streak>=3) award("streak3");
+  if(S.practiced>=5) award("practice5");
+  if(run.bestCombo>=8) award("combo8");
+  save();
+  const acc=Math.round(run.correct/total*100);
+  const verdict = acc===100?"Perfect round":acc>=75?"Strong round":acc>=50?"Good practice":"Keep at it";
+  app.innerHTML=`<div class="level"><article class="card result">
+    <div class="kicker">Practice Arena · ${d.label}</div>
+    <h2>${verdict}</h2>
+    <div class="tally"><div><b>${run.correct}/${total}</b><small>First-try right</small></div><div><b>×${run.bestCombo}</b><small>Best combo</small></div><div><b>+${earned}</b><small>XP earned</small></div></div>
+    <p>${acc<75?"Missed questions come back more often, so the next round will focus on them.":"Rounds stay fresh: most questions are generated with new values every time."}</p>
+    ${badgeLines()}
+  </article>
+  <div class="actionbar"><button class="cta" id="again">Practice again</button><div style="height:10px"></div><button class="cta blue" id="toMap">Back to map</button></div></div>`;
+  document.getElementById("again").onclick=startPractice;
+  document.getElementById("toMap").onclick=()=>{ renderMap(); window.scrollTo(0,0); };
+  window.scrollTo(0,0);
+}
+
+renderMap();
+checkApk();
+</script>

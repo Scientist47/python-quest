@@ -1,0 +1,8 @@
+{
+  "appId": "com.pythonquest.app",
+  "appName": "Python Quest",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#2E69B0"
+  }
+}
