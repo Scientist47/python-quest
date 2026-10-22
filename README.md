@@ -14,6 +14,9 @@ The whole game is one HTML file with no server or sign-up. This project also wra
 - **Three difficulty levels:** Beginner, Intermediate and Expert.
 - **Practice Arena.** Questions are generated fresh every round and weighted toward the levels you've missed most.
 - **Game systems:** hearts, 1–3 stars per level, XP and ranks, daily streaks, combos and 18 trophies.
+- **Email accounts with cloud saves.** Players can continue on any device, or play as a guest.
+- **Three course sections** (Foundations, Core Skills, Advanced) that group the worlds and unlock in order.
+- **A lesson timer.** Finishing faster than the target time earns bonus XP.
 - **Built for phones.** It has a symbol-key bar (`( ) : " = [ ]` and Tab) and auto-indentation, so writing code on an Android keyboard is practical.
 - **Light and dark themes.** It follows the device setting.
 
@@ -21,13 +24,14 @@ The whole game is one HTML file with no server or sign-up. This project also wra
 
 ## How to play
 
-1. Tap the first level on the map.
-2. Read the lesson and press **Run this example** to see the code in action.
-3. Answer the **predict the output** question.
-4. Solve the **code challenge**:
+1. Create an account or play as a guest, then choose a difficulty. The map appears once you've picked one.
+2. Tap the first level on the map.
+3. Read the lesson and press **Run this example** to see the code in action.
+4. Answer the **predict the output** question.
+5. Solve the **code challenge**:
    - **Run** is free. Use it to experiment as often as you like.
    - **Check** submits your code. A wrong check costs a heart.
-5. Finish with hearts left to earn stars and unlock the next level.
+6. Finish with hearts left to earn stars and unlock the next level.
 
 If you run out of hearts, the level restarts. Progress on other levels is never lost.
 
@@ -41,7 +45,28 @@ If you run out of hearts, the level restarts. Progress on other levels is never 
 
 On Expert, the starter code also has its helper comments removed.
 
-The difficulty can be changed at any time from the map. Each cleared level shows a tag for the hardest difficulty it was beaten on. Replaying a level on a harder difficulty earns its full XP again. Replaying on the same difficulty only earns XP for new stars.
+Players choose a difficulty before the map appears. They can change it any time from the map or their profile. Each cleared level shows a tag for the hardest difficulty it was beaten on. Replaying a level on a harder difficulty earns its full XP again. Replaying on the same difficulty only earns XP for new stars.
+
+### Lesson timer and speed bonus
+
+A timer runs while a lesson is open, and pauses when the app or tab is in the background. Each lesson has a target time:
+
+| Difficulty | Normal lesson | Boss |
+|---|---|---|
+| Beginner | 6:00 | 9:00 |
+| Intermediate | 4:00 | 6:00 |
+| Expert | 3:00 | 4:30 |
+
+| Finished within | Rating | Bonus on a first clear |
+|---|---|---|
+| Half the target | Lightning | +50% of the level's XP |
+| The target | Quick | +25% |
+| Twice the target | Steady | none |
+| Longer | Unhurried | none |
+
+Slow players are never penalised.
+
+On replays, beating your best time with a Lightning or Quick pace earns +10 XP before the difficulty multiplier. Best times show on the map under each level.
 
 ### Stars
 
@@ -242,6 +267,48 @@ After that, every new GitHub build is offered automatically, with no need to re-
 
 ---
 
+## Setting up accounts (Firebase)
+
+Players can create an account with their email and password, and their progress saves online. They can then carry on from any phone or computer.
+
+Accounts use [Firebase](https://firebase.google.com), Google's free service for logins and data. Until you add your Firebase settings, the game runs in **guest mode**, saving on each device only.
+
+1. Go to [console.firebase.google.com](https://console.firebase.google.com) and click **Add project**. Name it `python-quest` and follow the steps. Google Analytics is optional; you can switch it off.
+2. **Turn on email sign-in:** open **Security → Authentication → Get started → Sign-in method**, turn on **Email/password**, and click **Save**.
+3. **Create the database:**
+   1. Open **Databases & Storage → Firestore → Create database**.
+   2. Pick a location near your players, e.g. `europe-west`, and start in **production mode**.
+   3. Open the **Rules** tab, replace everything with the contents of `firestore.rules` from this project, and click **Publish**.
+4. **Get your settings:**
+   1. Click the gear icon, then **Project settings → General → Your apps**, and click the web icon `</>`.
+   2. Name the app `Python Quest` and click **Register app**. Leave "Firebase Hosting" unticked.
+   3. Firebase shows a `firebaseConfig` block. Copy the values of `apiKey`, `authDomain`, `projectId` and `appId`.
+5. **Paste them into the game:** in `src/index.html`, search for `FIREBASE_CONFIG` and fill in the four values:
+
+   ```js
+   const FIREBASE_CONFIG = {
+     apiKey: "AIza...",
+     authDomain: "python-quest-xxxx.firebaseapp.com",
+     projectId: "python-quest-xxxx",
+     appId: "1:1234:web:abcd"
+   };
+   ```
+
+   These values are meant to be public, so it's safe for them to be in the page. The `firestore.rules` file is what keeps each player's data private.
+6. **Allow your web addresses:** in **Authentication → Settings → Authorized domains**, add `pythonquest-game.netlify.app` and your own domain.
+7. Commit the change on GitHub. That rebuilds the app. Then upload the new website to Netlify.
+
+**What players see:**
+
+- On first open, they get a sign-up screen with a **Play as guest** option.
+- New accounts get a verification email. Players can still play before verifying.
+- **Forgot password?** sends a reset link.
+- Creating an account keeps everything earned as a guest.
+- The profile screen (tap the round avatar) shows the player's name, email, whether progress is saved, their stats and difficulty, and **Sign out**.
+- Progress made offline is kept on the device and syncs the next time the player is online.
+
+---
+
 ## Building on your own computer (optional)
 
 This needs Node.js 22+, Java 21 and Android Studio.
@@ -271,9 +338,14 @@ You'll also need a Google Play developer account. Use the same signing key.
 
 ## Saved progress
 
-Progress is saved in the browser's `localStorage` under the key `pyquest.v1`. It includes XP, stars, best difficulty per level, weak spots, trophies, streak and the chosen difficulty.
+Progress includes XP, stars, best difficulty and best time per level, weak spots, trophies, streak and the chosen difficulty.
 
-Progress stays on that device and browser only. It isn't synced between devices. Clearing site data, or pressing **Reset progress** at the bottom of the map, erases it.
+- **Guests:** saved in the browser's `localStorage` under `pyquest.v1`, on that device only.
+- **Signed-in players:** saved on the device under `pyquest.v1.u.<account id>`, and in Firestore at `players/<account id>`.
+  - Both copies are merged when a player signs in, so nothing earned on either is lost.
+  - A reset from the profile screen wins over older copies on other devices.
+
+**Reset progress** is on the profile screen.
 
 ---
 
@@ -340,7 +412,7 @@ Before shipping new content, check two things for every challenge:
 ## Known limitations
 
 - **Python coverage.** Skulpt implements most of core Python 3, which covers everything in the curriculum. It does not support third-party libraries (NumPy, pandas), file access or `input()`. Some advanced standard-library modules are missing too.
-- **No accounts.** Progress is per device. There's no syncing, leaderboard or teacher dashboard.
+- **No leaderboard or teacher dashboard yet.** Accounts save each player's own progress only.
 - **The website needs internet on first load** to fetch the Python engine (about 1 MB). The Android app works offline.
 
 ---
@@ -349,5 +421,6 @@ Before shipping new content, check two things for every challenge:
 
 - **App:** one self-contained HTML file with vanilla JavaScript and CSS, and no framework.
 - **Python engine:** [Skulpt 1.2.0](https://github.com/skulpt/skulpt), loaded from jsDelivr.
+- **Accounts:** Firebase Authentication (email/password) and Cloud Firestore, loaded from jsDelivr on the web and bundled in the app.
 - **Fonts:** Bungee, Nunito and JetBrains Mono. The website gets them from Google Fonts, and the app bundles them from Fontsource.
 - **Android:** [Capacitor 8](https://capacitorjs.com) wraps the game in a native app. GitHub Actions builds and signs the APK.

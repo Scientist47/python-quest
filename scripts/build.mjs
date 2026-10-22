@@ -48,6 +48,7 @@ fresh(www);
 mkdirSync(join(www, "vendor")); mkdirSync(join(www, "fonts"));
 copyFileSync(nm("skulpt/dist/skulpt.min.js"), join(www, "vendor/skulpt.min.js"));
 copyFileSync(nm("skulpt/dist/skulpt-stdlib.js"), join(www, "vendor/skulpt-stdlib.js"));
+for (const f of ["firebase-app-compat.js", "firebase-auth-compat.js", "firebase-firestore-compat.js"]) copyFileSync(nm("firebase/" + f), join(www, "vendor", f));
 
 const fonts = [
   ["Bungee", "bungee", [400]],
@@ -68,8 +69,9 @@ let appHead = headPart
 let appBody = bodyPart
   .replace("const IN_APP = false;", "const IN_APP = true;")
   .replace("https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js", "vendor/skulpt.min.js")
-  .replace("https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js", "vendor/skulpt-stdlib.js");
-for (const must of ["const IN_APP = true;", '"vendor/skulpt.min.js"', '"vendor/skulpt-stdlib.js"']) {
+  .replace("https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js", "vendor/skulpt-stdlib.js")
+  .replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/firebase@[\d.]+\/(firebase-[a-z]+-compat\.js)/g, "vendor/$1");
+for (const must of ["const IN_APP = true;", '"vendor/skulpt.min.js"', '"vendor/skulpt-stdlib.js"', '"vendor/firebase-auth-compat.js"']) {
   if (!appBody.includes(must)) throw new Error("Android build: could not set " + must + " — did src/index.html change?");
 }
 if (!appHead.includes("fonts/fonts.css")) throw new Error("Android build: could not swap the Google Fonts link");

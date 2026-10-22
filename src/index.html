@@ -159,6 +159,77 @@ textarea.editor:focus{outline:none}
 .engine{font-size:.8rem;color:var(--muted)}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:420px){.node{width:66px;height:66px}.node.boss{width:80px;height:80px}.card{padding:16px}.logo{font-size:1.3rem}}
+/* sign-in, difficulty and profile screens */
+.gate{min-height:100%;display:grid;place-items:center;padding-block:24px}
+.gate-card{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 20px;display:grid;gap:14px;position:relative}
+.gate-card.wide{max-width:640px}
+.gate-card > .iconbtn{position:absolute;top:14px;right:14px}
+.gate-title{font-family:var(--f-display);font-weight:400;font-size:1.5rem;line-height:1.15;margin:0;text-wrap:balance}
+.seg.two{grid-template-columns:1fr 1fr}
+.form{display:grid;gap:12px}
+.field{display:grid;gap:4px;font-weight:700;font-size:.9rem}
+.field input{font:inherit;font-weight:400;font-size:1rem;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.field input:focus{outline:none;border-color:var(--blue)}
+.form-msg{margin:0;font-size:.9rem;min-height:1.2em}
+.form-msg.bad{color:var(--bad)} .form-msg.ok{color:var(--good)}
+.form .linkbtn{justify-self:center}
+.gate-foot{display:grid;gap:6px;justify-items:center;text-align:center;border-top:1px solid var(--line);padding-top:14px}
+.gate-foot small{color:var(--muted);font-size:.82rem;max-width:36ch}
+.diffcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.diffcard{text-align:left;background:var(--bg);border:2px solid var(--line);border-bottom-width:4px;border-radius:16px;padding:14px;display:grid;gap:10px;align-content:start}
+.diffcard:hover{border-color:var(--blue)}
+.diffcard.on{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 8%,var(--bg))}
+.diff-name{font-family:var(--f-display);font-size:1.1rem}
+.diffcard.d0 .diff-name{color:var(--good)} .diffcard.d1 .diff-name{color:var(--blue)} .diffcard.d2 .diff-name{color:var(--bad)}
+.diffcard .hearts svg{width:18px;height:18px}
+.diffcard dl{margin:0;display:grid;gap:4px;font-size:.86rem}
+.diffcard dl div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+.diffcard dt{color:var(--muted)} .diffcard dd{margin:0;font-weight:700;text-align:right}
+.diffcard .btn{justify-content:center}
+.avatar{width:38px;height:38px;border-radius:50%;border:2px solid var(--blue);background:var(--surface);color:var(--blue);font-weight:800;display:grid;place-items:center;position:relative;padding:0;flex:none}
+.avatar svg{width:20px;height:20px}
+.avatar.big{width:64px;height:64px;font-size:1.6rem;font-family:var(--f-display);border-width:3px}
+.avatar.big svg{width:32px;height:32px}
+.sync-dot{position:absolute;right:-2px;bottom:-2px;width:12px;height:12px;border-radius:50%;border:2px solid var(--bg);background:var(--muted)}
+.sync-dot.synced{background:var(--good)} .sync-dot.saving{background:var(--yellow)} .sync-dot.offline{background:var(--bad)}
+.lv-title{font-family:var(--f-display);font-size:1.1rem}
+.profile-head{grid-template-columns:auto 1fr;align-items:center}
+.profile-head > div{min-width:0}
+.profile-head h2{font-size:1.3rem;overflow-wrap:anywhere}
+.profile-head .panel-note{overflow-wrap:anywhere}
+.sync{margin:4px 0 0;font-size:.85rem;font-weight:700;color:var(--muted)}
+.sync.synced{color:var(--good)} .sync.offline{color:var(--bad)}
+.notice{margin-top:8px;background:color-mix(in srgb,var(--yellow) 22%,var(--surface));border-radius:14px;padding:12px 14px;display:grid;gap:8px;font-size:.92rem}
+.row-between{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.danger{border-top:1px solid var(--line);padding-top:12px;font-size:.88rem;color:var(--muted)}
+/* sections */
+details.section{margin-top:22px;border:1px solid var(--line);border-radius:18px;background:var(--surface);padding:0 14px}
+details.section[open]{padding-bottom:14px}
+details.section > summary{list-style:none;cursor:pointer;display:flex;gap:12px;align-items:center;padding-block:14px}
+details.section > summary::-webkit-details-marker{display:none}
+.sec-text{display:grid;gap:2px;flex:1;min-width:0}
+.sec-num{font-size:.72rem;font-weight:800;letter-spacing:.12em;color:var(--blue)}
+details.complete .sec-num{color:var(--good)}
+.sec-name{font-family:var(--f-display);font-size:1.25rem;line-height:1.15}
+.sec-desc{color:var(--muted);font-size:.9rem}
+.sec-progress{display:flex;align-items:center;gap:10px;margin-top:6px}
+.sec-progress .bar{flex:1;height:8px}
+.sec-progress small{color:var(--muted);font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sec-icon{width:36px;height:36px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;flex:none;color:var(--muted);transition:transform .2s}
+.sec-icon svg{width:20px;height:20px}
+details.section[open] .sec-icon{transform:rotate(180deg)}
+details.section.locked .sec-name{color:var(--muted)}
+details.section .world:first-of-type{margin-top:4px}
+/* timer */
+.timer{display:inline-flex;align-items:center;gap:4px;font-weight:800;font-variant-numeric:tabular-nums;font-size:.92rem;color:var(--muted);flex:none}
+.timer svg{width:16px;height:16px}
+.timer.over{color:var(--bad)}
+.besttime{display:inline-flex;align-items:center;gap:3px;font-size:.8rem;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.besttime svg{width:13px;height:13px}
+.speed{margin:0;font-size:.95rem}
+.speed.s0 b{color:#C98A00} .speed.s1 b{color:var(--good)} .speed.s2 b,.speed.s3 b{color:var(--muted)}
+.stats{align-items:center}
+@media (max-width:420px){.lv-top .timer svg{display:none}}
 /* android download card */
 .appcard{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .appcard .pr-icon{background:#3DDC84;color:#0B3D22}
@@ -489,7 +560,23 @@ const LEVELS = [
 // IN_APP is switched to true by the Android build, which hides the download card inside the app.
 // APK_URL: a file name next to index.html on your web host, or a full https link (e.g. a GitHub release).
 const IN_APP = false;
-const APK_URL = "python-quest.apk";
+const APK_URL = "https://github.com/scientist47/python-quest/releases/latest/download/python-quest.apk";
+
+// Online accounts (Firebase). Paste your project's web config here to switch on email sign-in and cloud saves.
+// Leave apiKey empty and the game runs in guest mode, saving on this device only. See README: "Setting up accounts".
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCINpAjC9GXs8sGbhreKq9kLsdYveM-wMI",
+  authDomain: "python-quest-1aafa.firebaseapp.com",
+  projectId: "python-quest-1aafa",
+  storageBucket: "python-quest-1aafa.firebasestorage.app",
+  messagingSenderId: "914928465958",
+  appId: "1:914928465958:web:c0d16415604744e4cccee7"
+};
+const FIREBASE_SDK = [
+  "https://cdn.jsdelivr.net/npm/firebase@12.19.0/firebase-app-compat.js",
+  "https://cdn.jsdelivr.net/npm/firebase@12.19.0/firebase-auth-compat.js",
+  "https://cdn.jsdelivr.net/npm/firebase@12.19.0/firebase-firestore-compat.js"
+];
 
 /* ===================== state ===================== */
 const KEY = "pyquest.v1";
@@ -522,11 +609,109 @@ const BADGES = [
  {id:"ironwill",name:"Iron Will", desc:"Defeat any boss on Expert", m:"EXP"},
  {id:"grandmaster",name:"Grandmaster", desc:"Clear every level on Expert", m:"GM"}
 ];
-function fresh(){ return {xp:0, done:{}, best:{}, miss:{}, badges:[], streak:0, last:null, diff:1, practiced:0}; }
-let S = fresh();
-try{ const raw = localStorage.getItem(KEY); if(raw){ const old=JSON.parse(raw); S = Object.assign(fresh(), old);
-  if(!old.best){ Object.keys(S.done).forEach(id=>S.best[id]=1); } } }catch(e){}
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function fresh(){ return {xp:0, done:{}, best:{}, times:{}, miss:{}, badges:[], streak:0, last:null, diff:1, diffChosen:false, practiced:0, updated:0}; }
+// Progress is stored per player: guests under KEY, signed-in players under KEY + their account id.
+let storeKey = KEY;
+function loadLocal(key){
+  try{ const raw = localStorage.getItem(key); if(!raw) return fresh();
+    const old = JSON.parse(raw), st = Object.assign(fresh(), old);
+    if(!old.best){ Object.keys(st.done).forEach(id=>st.best[id]=1); }
+    if(old.diffChosen===undefined && Object.keys(st.done).length) st.diffChosen = true;  // players from before this update keep their map
+    return st;
+  }catch(e){ return fresh(); }
+}
+let S = loadLocal(KEY);
+function save(){
+  S.updated = Date.now();
+  try{ localStorage.setItem(storeKey, JSON.stringify(S)); }catch(e){}
+  Cloud.queuePush();
+}
+// Combine two copies of progress (this device and the cloud) without losing anything earned on either.
+function mergeProgress(a, b){
+  // A reset on one device wins over anything older on the other.
+  if((a.resetAt||0) > (b.updated||0)) return Object.assign(fresh(), a);
+  if((b.resetAt||0) > (a.updated||0)) return Object.assign(fresh(), b);
+  const m = fresh(), newer = (a.updated||0) >= (b.updated||0) ? a : b;
+  m.xp = Math.max(a.xp||0, b.xp||0);
+  for(const k of ["done","best"]) { m[k] = Object.assign({}, a[k]); for(const [id,v] of Object.entries(b[k]||{})) m[k][id] = Math.max(m[k][id] ?? -1, v); }
+  m.times = Object.assign({}, a.times); for(const [id,v] of Object.entries(b.times||{})) m.times[id] = Math.min(m.times[id] ?? Infinity, v);
+  m.miss = Object.assign({}, newer.miss);
+  m.badges = [...new Set([...(a.badges||[]), ...(b.badges||[])])];
+  const la = a.last ? Date.parse(a.last.replace(/-(\d)(?=-|$)/g,"-0$1")) : 0, lb = b.last ? Date.parse(b.last.replace(/-(\d)(?=-|$)/g,"-0$1")) : 0;
+  const ls = la >= lb ? a : b; m.streak = ls.streak||0; m.last = ls.last||null;
+  m.diff = newer.diff ?? 1; m.diffChosen = !!(a.diffChosen || b.diffChosen);
+  m.practiced = Math.max(a.practiced||0, b.practiced||0);
+  m.updated = Math.max(a.updated||0, b.updated||0);
+  m.resetAt = Math.max(a.resetAt||0, b.resetAt||0);
+  return m;
+}
+
+/* ===================== cloud accounts (Firebase) ===================== */
+const Cloud = (() => {
+  const enabled = !!(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey);
+  let auth = null, db = null, user = null, timer = null, status = "local", lastSync = 0, ready = null;
+  const listeners = [];
+  const loadScript = src => new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("load " + src)); document.head.appendChild(s); });
+  function init(){
+    if(ready) return ready;
+    ready = (async () => {
+      if(!enabled) return false;
+      for(const src of FIREBASE_SDK) await loadScript(src);
+      firebase.initializeApp(FIREBASE_CONFIG);
+      auth = firebase.auth(); db = firebase.firestore();
+      return true;
+    })().catch(e => { console.warn(e); status = "offline"; return false; });
+    return ready;
+  }
+  // Resolves with the signed-in user (or null) once Firebase has checked; gives up after 8 s.
+  function currentUser(){
+    return init().then(ok => ok ? new Promise(res => {
+      let done = false; const t = setTimeout(() => { if(!done){ done = true; res(auth.currentUser); } }, 8000);
+      const off = auth.onAuthStateChanged(u => { if(!done){ done = true; clearTimeout(t); off(); res(u); } });
+    }) : null);
+  }
+  const ref = () => db.collection("players").doc(user.uid);
+  async function pull(){
+    if(!user) return null;
+    try{ const snap = await ref().get(); status = "synced"; lastSync = Date.now(); notify(); return snap.exists ? snap.data() : null; }
+    catch(e){ status = "offline"; notify(); return null; }
+  }
+  async function push(){
+    if(!user) return;
+    try{
+      await ref().set({ name: user.displayName || "", email: user.email, progress: JSON.parse(JSON.stringify(S, (k,v) => v===Infinity ? null : v)),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      status = "synced"; lastSync = Date.now();
+    }catch(e){ status = "offline"; }
+    notify();
+  }
+  function queuePush(){ if(!user) return; status = "saving"; notify(); clearTimeout(timer); timer = setTimeout(push, 1200); }
+  function notify(){ listeners.forEach(f => { try{ f(status); }catch(e){} }); }
+  const ERR = {
+    "auth/email-already-in-use":"An account with this email already exists. Sign in instead.",
+    "auth/invalid-email":"That email address doesn't look right.",
+    "auth/weak-password":"Use a password with at least 6 characters.",
+    "auth/missing-password":"Enter your password.",
+    "auth/invalid-credential":"Email or password is wrong.",
+    "auth/wrong-password":"Email or password is wrong.",
+    "auth/user-not-found":"No account uses this email. Create one instead.",
+    "auth/too-many-requests":"Too many tries. Wait a few minutes, then try again.",
+    "auth/network-request-failed":"No internet connection. Check it and try again."
+  };
+  const nice = e => ERR[e && e.code] || (e && e.message) || "Something went wrong. Try again.";
+  return {
+    enabled, init, currentUser, pull, push, queuePush, nice,
+    get user(){ return user; }, set user(u){ user = u; status = u ? "synced" : "local"; },
+    get status(){ return status; }, get lastSync(){ return lastSync; },
+    onStatus(f){ listeners.push(f); },
+    async signUp(name, email, pw){ await init(); const c = await auth.createUserWithEmailAndPassword(email, pw); await c.user.updateProfile({displayName:name}); try{ await c.user.sendEmailVerification(); }catch(e){} return c.user; },
+    async signIn(email, pw){ await init(); return (await auth.signInWithEmailAndPassword(email, pw)).user; },
+    async reset(email){ await init(); await auth.sendPasswordResetEmail(email); },
+    async resend(){ if(user) await user.sendEmailVerification(); },
+    async refresh(){ if(user){ await user.reload(); user = auth.currentUser; } return user; },
+    async signOut(){ clearTimeout(timer); if(user) await push(); if(auth) await auth.signOut(); user = null; status = "local"; }
+  };
+})();
 const D = () => DIFFS[S.diff] || DIFFS[1];
 function dstr(d){ return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
 function touchStreak(){
@@ -554,6 +739,9 @@ const I = {
  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
  android:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.08c-1.77 0-3.43.39-4.92 1.06L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>`,
  download:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>`,
+ user:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>`,
+ timer:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>`,
+ chevron:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
  dumbbell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12"/></svg>`,
  snake:`<svg viewBox="0 0 40 40" width="34" height="34"><path d="M8 30c0-6 6-6 12-6s12 0 12-6-6-6-10-6" fill="none" stroke="var(--blue)" stroke-width="6" stroke-linecap="round"/><circle cx="22" cy="12" r="5.5" fill="var(--yellow)"/><circle cx="23.5" cy="10.8" r="1.3" fill="#162033"/></svg>`
 };
@@ -677,6 +865,187 @@ GEN.methods = GEN.classes;
 const app = document.getElementById("app");
 function toast(t){ const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2400); }
 
+/* ===================== sign-in, difficulty and profile screens ===================== */
+const MODE_KEY = "pyquest.mode";
+const getMode = () => { try{ return localStorage.getItem(MODE_KEY); }catch(e){ return null; } };
+const setMode = m => { try{ m ? localStorage.setItem(MODE_KEY, m) : localStorage.removeItem(MODE_KEY); }catch(e){} };
+const SECTIONS = [
+  {name:"Foundations", desc:"Printing, variables, numbers, text and decisions", worlds:[0,1]},
+  {name:"Core Skills", desc:"Loops, lists, functions and dictionaries", worlds:[2,3]},
+  {name:"Advanced", desc:"Text tools, errors, list tricks and classes", worlds:[4,5,6]}
+];
+const PAR_SECONDS = {level:240, boss:360};       // target time at Intermediate
+const PAR_FACTOR = [1.5, 1, 0.75];               // Beginner gets longer, Expert shorter
+const SPEED = [{max:0.5, name:"Lightning", pct:50}, {max:1, name:"Quick", pct:25}, {max:2, name:"Steady", pct:0}, {max:Infinity, name:"Unhurried", pct:0}];
+const parMs = (lv, diff) => (lv.boss ? PAR_SECONDS.boss : PAR_SECONDS.level) * PAR_FACTOR[diff] * 1000;
+const speedTier = (ms, par) => SPEED.find(t => ms <= par * t.max);
+const clock = ms => { const s = Math.max(0, Math.round(ms/1000)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; };
+const initial = () => { const n = (Cloud.user && (Cloud.user.displayName || Cloud.user.email)) || ""; return n ? n.trim()[0].toUpperCase() : ""; };
+
+function renderSplash(){
+  app.innerHTML = `<div class="gate"><div class="gate-card" style="text-align:center;justify-items:center">${I.snake}<div class="logo">Python <span>Quest</span></div><p class="panel-note">Loading your progress…</p></div></div>`;
+}
+
+async function boot(){
+  renderSplash();
+  if(!Cloud.enabled){ enterGuest(); return; }               // accounts not set up: play on this device
+  const u = await Cloud.currentUser();
+  if(u){ await enterAccount(u, false); return; }
+  if(getMode()==="guest"){ enterGuest(); return; }
+  renderAuth("signup");
+}
+function enterGuest(){
+  setMode("guest"); Cloud.user = null; storeKey = KEY; S = loadLocal(KEY);
+  afterLogin();
+}
+async function enterAccount(u, carryGuest){
+  setMode("account"); Cloud.user = u; storeKey = KEY + ".u." + u.uid;
+  renderSplash();
+  let st = loadLocal(storeKey);
+  if(carryGuest) st = mergeProgress(st, loadLocal(KEY));
+  const cloud = await Cloud.pull();
+  if(cloud && cloud.progress) st = mergeProgress(st, Object.assign(fresh(), cloud.progress));
+  S = st; save();
+  afterLogin();
+}
+function afterLogin(){ if(!S.diffChosen) renderDifficulty(true); else { renderMap(); checkApk(); } window.scrollTo(0,0); }
+
+function renderAuth(tab, fromGuest){
+  run = null;
+  const up = tab==="signup";
+  app.innerHTML = `<div class="gate"><div class="gate-card">
+    <div class="logo">${I.snake}<div>Python <span>Quest</span></div></div>
+    <h1 class="gate-title">${up ? "Create your account" : "Welcome back"}</h1>
+    <p class="panel-note">${up ? "Your progress saves to your account, so you can carry on from any phone or computer." : "Sign in to carry on where you left off."}</p>
+    <div class="seg two" role="tablist"><button role="tab" aria-selected="${up}" class="${up?'on':''}" id="tabUp">Create account</button><button role="tab" aria-selected="${!up}" class="${up?'':'on'}" id="tabIn">Sign in</button></div>
+    <form id="authForm" class="form" novalidate>
+      ${up ? `<label class="field"><span>Your name</span><input id="fName" autocomplete="name" maxlength="40" required placeholder="e.g. Ada"></label>` : ""}
+      <label class="field"><span>Email</span><input id="fEmail" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com"></label>
+      <label class="field"><span>Password</span><input id="fPw" type="password" autocomplete="${up?'new-password':'current-password'}" minlength="6" required placeholder="${up?'At least 6 characters':''}"></label>
+      <p class="form-msg" id="authMsg" role="status" aria-live="polite"></p>
+      <button class="cta" id="authGo" type="submit">${up ? "Create account" : "Sign in"}</button>
+      ${up ? "" : `<button type="button" class="linkbtn" id="forgot">Forgot password?</button>`}
+    </form>
+    <div class="gate-foot">${fromGuest ? `<button class="linkbtn" id="back">Back to the game</button>` : `<button class="btn" id="guest">Play as guest</button><small>Guest progress stays on this device only. You can create an account later and keep it.</small>`}</div>
+  </div></div>`;
+  window.scrollTo(0,0);
+  const msg = (t, ok) => { const m = document.getElementById("authMsg"); m.textContent = t; m.className = "form-msg" + (ok ? " ok" : t ? " bad" : ""); };
+  document.getElementById("tabUp").onclick = () => renderAuth("signup", fromGuest);
+  document.getElementById("tabIn").onclick = () => renderAuth("signin", fromGuest);
+  const g = document.getElementById("guest"); if(g) g.onclick = enterGuest;
+  const b = document.getElementById("back"); if(b) b.onclick = renderProfile;
+  const f = document.getElementById("forgot");
+  if(f) f.onclick = async () => {
+    const email = document.getElementById("fEmail").value.trim();
+    if(!email){ msg("Type your email above, then tap Forgot password again."); return; }
+    try{ await Cloud.reset(email); msg(`If an account uses ${email}, a reset link is on its way. Check your inbox and spam folder.`, true); }
+    catch(e){ msg(Cloud.nice(e)); }
+  };
+  document.getElementById("authForm").onsubmit = async e => {
+    e.preventDefault();
+    const name = up ? document.getElementById("fName").value.trim() : "";
+    const email = document.getElementById("fEmail").value.trim(), pw = document.getElementById("fPw").value;
+    if(up && !name){ msg("Enter your name."); return; }
+    if(!email){ msg("Enter your email."); return; }
+    if(!pw){ msg("Enter your password."); return; }
+    if(up && pw.length < 6){ msg("Use a password with at least 6 characters."); return; }
+    const go = document.getElementById("authGo"); go.disabled = true; go.textContent = up ? "Creating account…" : "Signing in…"; msg("");
+    try{
+      const u = up ? await Cloud.signUp(name, email, pw) : await Cloud.signIn(email, pw);
+      await enterAccount(u, up);      // a new account keeps the progress made as a guest
+      toast(up ? `Welcome, ${name}! Check your email to verify your address.` : "Signed in. Progress synced.");
+    }catch(err){ msg(Cloud.nice(err)); go.disabled = false; go.textContent = up ? "Create account" : "Sign in"; }
+  };
+}
+
+function renderDifficulty(first){
+  run = null;
+  const rows = [
+    ["Hearts per level", d => String(d.hearts)],
+    ["Hints", d => d.hints ? (d.hintCost ? `${d.hintCost} XP each` : "Free") : "None"],
+    ["Answer shown", d => d.revealAfter===Infinity ? "Never" : `After ${d.revealAfter} miss${d.revealAfter>1?"es":""}`],
+    ["Quiz answers", d => d.typed ? "Type them" : "Pick one"],
+    ["Target time", d => `${clock(PAR_SECONDS.level*PAR_FACTOR[DIFFS.indexOf(d)]*1000)} a lesson`],
+    ["XP", d => `${d.mult}×`]
+  ];
+  app.innerHTML = `<div class="gate"><div class="gate-card wide">
+    ${first ? "" : `<button class="iconbtn" id="back" aria-label="Back">${I.x}</button>`}
+    <div class="kicker">${first ? "One last step" : "Settings"}</div>
+    <h1 class="gate-title">Choose your difficulty</h1>
+    <p class="panel-note">This sets your hearts, hints and how much XP you earn. You can change it any time from your profile.</p>
+    <div class="diffcards">${DIFFS.map((d,k)=>`<button class="diffcard d${k} ${!first && k===S.diff?'on':''}" data-d="${k}">
+      <span class="diff-name">${d.label}</span>
+      <span class="hearts" aria-hidden="true">${Array.from({length:d.hearts},()=>I.heart(true)).join("")}</span>
+      <dl>${rows.map(([t,f])=>`<div><dt>${t}</dt><dd>${f(d)}</dd></div>`).join("")}</dl>
+      <span class="btn ${k===1?'run':''}">${!first && k===S.diff ? "Current" : "Choose " + d.label}</span></button>`).join("")}</div>
+  </div></div>`;
+  window.scrollTo(0,0);
+  const b = document.getElementById("back"); if(b) b.onclick = renderProfile;
+  app.querySelectorAll(".diffcard").forEach(c => c.onclick = () => {
+    S.diff = +c.dataset.d; S.diffChosen = true; save();
+    toast(`Difficulty: ${D().label}`);
+    if(first){ renderMap(); checkApk(); } else renderProfile();
+    window.scrollTo(0,0);
+  });
+}
+
+function syncLine(){
+  if(!Cloud.user) return Cloud.enabled ? "Saved on this device only." : "Saved on this device only. Online accounts aren't switched on for this game yet.";
+  return {synced:"Saved to your account.", saving:"Saving to your account…", offline:"Offline. Your progress is safe here and will sync when you reconnect.", local:"Saved on this device."}[Cloud.status] || "";
+}
+function renderProfile(){
+  run = null;
+  const u = Cloud.user, r = rankOf(S.xp);
+  const cleared = LEVELS.filter(l=>S.done[l.id]!==undefined).length;
+  const timed = Object.keys(S.times||{}).length;
+  app.innerHTML = `<div class="shell-narrow">
+    <div class="lv-top"><button class="iconbtn" id="back" aria-label="Back to map">${I.x}</button><span class="lv-title">Profile</span></div>
+    <section class="card profile-head">
+      <span class="avatar big" aria-hidden="true">${initial() || I.user}</span>
+      <div><h2>${esc(u ? (u.displayName || "Player") : "Guest player")}</h2>
+        <p class="panel-note">${u ? esc(u.email) : "Not signed in"}</p>
+        <p class="sync ${Cloud.status}" id="syncLine">${syncLine()}</p></div>
+    </section>
+    ${u && !u.emailVerified ? `<section class="notice"><b>Verify your email.</b> We sent a link to ${esc(u.email)}. It protects your account if you forget your password.
+      <span class="tools"><button class="btn" id="resend">Send the link again</button><button class="btn" id="verified">I've verified it</button></span></section>` : ""}
+    <section class="card">
+      <div class="tally">
+        <div><b>${S.xp}</b><small>XP · ${RANKS[r][1]}</small></div>
+        <div><b>${cleared}/${LEVELS.length}</b><small>Levels cleared</small></div>
+        <div><b>${S.badges.length}/${BADGES.length}</b><small>Trophies</small></div>
+        <div><b>${S.streak}</b><small>Day streak</small></div>
+        <div><b>${S.practiced||0}</b><small>Practice rounds</small></div>
+        <div><b>${timed}</b><small>Timed lessons</small></div>
+      </div>
+    </section>
+    <section class="card"><h3 class="section-label">Difficulty</h3>
+      <div class="row-between"><span><b>${D().label}</b> <span class="panel-note">· ${D().hearts} hearts · ${D().mult}× XP</span></span><button class="btn" id="chDiff">Change</button></div>
+    </section>
+    <section class="card"><h3 class="section-label">Account</h3>
+      ${u ? `<button class="btn" id="signout">Sign out</button>`
+        : Cloud.enabled ? `<p class="panel-note">Create an account to save your progress online and play on any device. Everything you've earned as a guest comes with you.</p>
+          <div class="tools"><button class="btn run" id="mkAcct">Create account</button><button class="btn" id="signin">Sign in</button></div>`
+        : `<p class="panel-note">Online accounts aren't switched on for this game yet, so progress is saved on this device.</p>`}
+      <div class="danger" id="resetArea"><button class="linkbtn" id="reset">Reset progress</button></div>
+    </section>
+  </div>`;
+  window.scrollTo(0,0);
+  document.getElementById("back").onclick = () => { renderMap(); window.scrollTo(0,0); };
+  document.getElementById("chDiff").onclick = () => renderDifficulty(false);
+  const on = (id, f) => { const el = document.getElementById(id); if(el) el.onclick = f; };
+  on("mkAcct", () => renderAuth("signup", true));
+  on("signin", () => renderAuth("signin", true));
+  on("signout", async () => { await Cloud.signOut(); setMode(null); storeKey = KEY; S = loadLocal(KEY); toast("Signed out"); renderAuth("signin"); });
+  on("resend", async () => { try{ await Cloud.resend(); toast("Verification email sent"); }catch(e){ toast(Cloud.nice(e)); } });
+  on("verified", async () => { try{ const v = await Cloud.refresh(); toast(v && v.emailVerified ? "Email verified" : "Not verified yet. Open the link in the email first."); renderProfile(); }catch(e){ toast(Cloud.nice(e)); } });
+  on("reset", () => {
+    document.getElementById("resetArea").innerHTML = `Erase all XP, stars and trophies${u?" on every device":""}? <button class="linkbtn" id="yes">Erase</button> · <button class="linkbtn" id="no">Keep</button>`;
+    on("yes", () => { const keep = {diff:S.diff, diffChosen:S.diffChosen}; S = Object.assign(fresh(), keep, {resetAt:Date.now()}); save(); if(u) Cloud.push(); toast("Progress erased"); renderProfile(); });
+    on("no", renderProfile);
+  });
+}
+Cloud.onStatus(() => { const el = document.getElementById("syncLine"); if(el){ el.textContent = syncLine(); el.className = "sync " + Cloud.status; } const dot = document.getElementById("syncDot"); if(dot) dot.className = "sync-dot " + (Cloud.user ? Cloud.status : "local"); });
+
 let apkState = "unknown", apkSize = "";
 async function checkApk(){
   if(IN_APP || apkState!=="unknown") return;
@@ -687,8 +1056,9 @@ async function checkApk(){
     apkState = r.ok && !/text\/html/.test(type) ? "ok" : "missing";
     const n = +r.headers.get("content-length"); if(n) apkSize = (n/1048576).toFixed(1)+" MB";
   }catch(e){ apkState="missing"; }
-  if(!run) renderMap();
+  if(!run && document.getElementById("profileBtn")) renderMap();   // only refresh if the map is showing
 }
+const openSections = new Set();
 function renderMap(){
   run = null;
   const r = rankOf(S.xp), next = RANKS[r+1];
@@ -698,7 +1068,8 @@ function renderMap(){
   const weak = cleared.filter(l=>(S.miss[l.id]||0)>0).sort((a,b)=>S.miss[b.id]-S.miss[a.id]).slice(0,3);
   let h = `<header class="topbar">
     <div class="logo">${I.snake}<div>Python <span>Quest</span></div></div>
-    <div class="stats"><span class="chip" title="Day streak">${I.flame}${S.streak}</span><span class="chip" title="Experience points">${I.bolt}${S.xp} XP</span></div>
+    <div class="stats"><span class="chip" title="Day streak">${I.flame}${S.streak}</span><span class="chip" title="Experience points">${I.bolt}${S.xp} XP</span>
+      <button class="avatar" id="profileBtn" aria-label="Profile${Cloud.user?`: ${esc(Cloud.user.displayName||Cloud.user.email)}`:" (guest)"}">${initial() || I.user}<span id="syncDot" class="sync-dot ${Cloud.user ? Cloud.status : "local"}"></span></button></div>
   </header>
   <section class="rank" aria-label="Your rank">
     <div class="rank-row"><span class="rank-title">${RANKS[r][1]}</span><span class="rank-sub">${next ? `${next[0]-S.xp} XP to ${next[1]}` : "Top rank reached"}</span></div>
@@ -723,7 +1094,18 @@ function renderMap(){
       <p class="panel-note" id="apkNote">${apkState==="missing"?"The Android app is on its way. Check back soon.":`Play on your phone, even offline.${apkSize?` Free, ${apkSize}.`:" Free."} When Android asks, allow installs from your browser.`}</p></div>
     ${apkState==="missing" ? `<span class="btn" aria-disabled="true">Coming soon</span>` : `<a class="btn run" id="apkLink" href="${esc(APK_URL)}" download="python-quest.apk" rel="noopener">${I.download} Download APK</a>`}
   </section>`}`;
-  WORLDS.forEach((w,wi)=>{
+  SECTIONS.forEach((sec,si)=>{
+    const secLv = LEVELS.map((l,i)=>[l,i]).filter(([l])=>sec.worlds.includes(l.world));
+    const done = secLv.filter(([l])=>S.done[l.id]!==undefined).length, total = secLv.length;
+    const open = unlocked(secLv[0][1]), complete = done===total;
+    const hasCur = secLv.some(([,i])=>i===curIdx);
+    const expanded = openSections.has(si) || (!openSections.size && (hasCur || (curIdx<0 && si===SECTIONS.length-1)));
+    h += `<details class="section ${open?'':'locked'} ${complete?'complete':''}" data-sec="${si}" ${expanded?'open':''}>
+      <summary><div class="sec-text"><span class="sec-num">SECTION ${si+1}${complete?" · COMPLETE":""}</span><span class="sec-name">${sec.name}</span><span class="sec-desc">${open ? sec.desc : `Clear Section ${si} to unlock`}</span>
+        <span class="sec-progress"><span class="bar"><i style="width:${Math.round(done/total*100)}%"></i></span><small>${done}/${total} levels</small></span></div>
+        <span class="sec-icon" aria-hidden="true">${open ? I.chevron : I.lock}</span></summary>`;
+    sec.worlds.forEach(wi=>{
+    const w = WORLDS[wi];
     const lvls = LEVELS.map((l,i)=>[l,i]).filter(([l])=>l.world===wi);
     const wLocked = !unlocked(lvls[0][1]);
     h += `<section class="world ${wLocked?'locked':''}"><div class="world-head"><div><div class="world-num">WORLD ${wi+1}</div><div class="world-name">${w.name}</div><div class="world-desc">${w.desc}</div></div></div><div class="trail">`;
@@ -731,28 +1113,32 @@ function renderMap(){
       const done = S.done[l.id]!==undefined, open = unlocked(i), cur = i===curIdx;
       const off = [0,46,92,46][k%4];
       const icon = !open ? I.lock : l.boss ? I.skull : done ? I.check : I.play;
-      const best = S.best[l.id];
+      const best = S.best[l.id], bt = S.times && S.times[l.id];
       h += `<div class="node-row" style="padding-left:min(${off}px, 12vw)">
         <button class="node ${done?'done':''} ${!open?'locked':''} ${l.boss?'boss':''} ${cur?'current':''}" data-lv="${i}" aria-label="${esc(l.title)}${open?'':' (locked)'}" ${open?'':'aria-disabled="true"'}>${icon}</button>
-        <div class="node-label"><b>${l.title}</b><small>${l.blurb}</small>${done?`<div class="meta"><span class="stars">${[1,2,3].map(s=>I.star(s<=S.done[l.id])).join("")}</span>${best!==undefined?`<span class="tag d${best}">${DIFFS[best].label}</span>`:""}</div>`:""}</div></div>`;
+        <div class="node-label"><b>${l.title}</b><small>${l.blurb}</small>${done?`<div class="meta"><span class="stars">${[1,2,3].map(s=>I.star(s<=S.done[l.id])).join("")}</span>${best!==undefined?`<span class="tag d${best}">${DIFFS[best].label}</span>`:""}${bt?`<span class="besttime" title="Best time">${I.timer}${clock(bt)}</span>`:""}</div>`:""}</div></div>`;
     });
     h += `</div></section>`;
+    });
+    h += `</details>`;
   });
   h += `<section class="badges"><h3 class="section-label">Trophy shelf · ${S.badges.length}/${BADGES.length}</h3><div class="badge-grid">
     ${BADGES.map(b=>`<div class="badge ${S.badges.includes(b.id)?'':'off'}"><div class="medal">${b.m}</div><b>${b.name}</b><small>${b.desc}</small></div>`).join("")}
   </div></section>
-  <div class="footer-note"><span>Progress is saved in this browser.</span><span id="resetArea"><button class="linkbtn" id="reset">Reset progress</button></span></div>`;
+  <div class="footer-note"><span>${Cloud.user ? "Progress saves to your account." : "Progress is saved on this device."}</span><button class="linkbtn" id="toProfile">Profile and settings</button></div>`;
   app.innerHTML = h;
   app.querySelectorAll(".node").forEach(b=>b.onclick=()=>{
     const i=+b.dataset.lv; if(!unlocked(i)){ toast("Finish the level before this one to unlock it"); return; } startLevel(i);
   });
   app.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{ S.diff=+b.dataset.d; save(); renderMap(); toast(`Difficulty set to ${D().label}`); });
   document.getElementById("practice").onclick=startPractice;
-  document.getElementById("reset").onclick=()=>{
-    document.getElementById("resetArea").innerHTML=`Erase all XP and stars? <button class="linkbtn" id="yes">Erase</button> · <button class="linkbtn" id="no">Keep</button>`;
-    document.getElementById("yes").onclick=()=>{ S=fresh(); save(); renderMap(); toast("Progress erased"); };
-    document.getElementById("no").onclick=renderMap;
-  };
+  document.getElementById("profileBtn").onclick=renderProfile;
+  document.getElementById("toProfile").onclick=renderProfile;
+  app.querySelectorAll("details.section").forEach(d=>d.addEventListener("toggle",()=>{
+    if(!openSections.size) app.querySelectorAll("details.section[open]").forEach(x=>openSections.add(+x.dataset.sec));
+    d.open ? openSections.add(+d.dataset.sec) : openSections.delete(+d.dataset.sec);
+    if(d.classList.contains("locked") && d.open) toast("Finish the section before this one to unlock it");
+  }));
 }
 
 /* ===================== runs (levels and practice) ===================== */
@@ -764,7 +1150,8 @@ function newRun(extra){
 }
 function startLevel(i){
   const lv=LEVELS[i];
-  newRun({kind:"level", i, lv, title:lv.title, step:-1, steps:lv.steps.map(s=>Object.assign({from:lv.id}, s))});
+  newRun({kind:"level", i, lv, title:lv.title, step:-1, steps:lv.steps.map(s=>Object.assign({from:lv.id}, s)),
+          elapsed:0, tickFrom: document.hidden ? null : performance.now(), finished:false});
   renderStep(); window.scrollTo(0,0);
 }
 function weightedLevel(pool){
@@ -813,9 +1200,16 @@ async function startPractice(){
 function resetStepState(){ if(!run) return; run.state="idle"; run.sel=null; run.failed=false; run.hintUsed=false; run.fails=0; run.revealed=false; run.draft=undefined; run.typed=""; }
 
 function heartsHTML(){ return Array.from({length:run.d.hearts},(_,k)=>I.heart(k<run.hearts)).join(""); }
+const elapsedMs = () => run ? (run.elapsed||0) + (run.tickFrom!=null ? performance.now()-run.tickFrom : 0) : 0;
+function stopClock(){ if(run && run.tickFrom!=null){ run.elapsed += performance.now()-run.tickFrom; run.tickFrom=null; } }
+document.addEventListener("visibilitychange",()=>{
+  if(!run || run.kind!=="level" || run.finished) return;
+  if(document.hidden) stopClock(); else if(run.tickFrom==null) run.tickFrom=performance.now();
+});
+setInterval(()=>{ const t=document.getElementById("timer"); if(t && run && run.kind==="level" && !run.finished){ const ms=elapsedMs(), par=parMs(run.lv, run.diff); t.lastChild.textContent=clock(ms); t.classList.toggle("over", ms>par); } }, 1000);
 function topRight(){
   if(run.kind==="practice") return `<span class="combo ${run.combo>=3?'hot':''}" id="combo" aria-label="Combo ${run.combo}">×${run.combo}</span>`;
-  return `<div class="hearts" id="hearts" aria-label="${run.hearts} hearts left">${heartsHTML()}</div>`;
+  return `<span class="timer ${elapsedMs()>parMs(run.lv, run.diff)?'over':''}" id="timer" title="Time on this lesson (target ${clock(parMs(run.lv, run.diff))})">${I.timer}<span>${clock(elapsedMs())}</span></span><div class="hearts" id="hearts" aria-label="${run.hearts} hearts left">${heartsHTML()}</div>`;
 }
 function lvTop(){
   const n = run.steps.length + (run.kind==="level"?1:0);
@@ -1007,7 +1401,13 @@ function renderLevelResult(){
   const prevStars=S.done[lv.id], prevBest=S.best[lv.id];
   const newBest = prevBest===undefined || run.diff>prevBest;
   const base = newBest ? run.xp + stars*10 : Math.max(0, stars-(prevStars||0))*10;
-  const earned = Math.round(base*d.mult);
+  stopClock(); run.finished=true;
+  const ms = elapsedMs(), par = parMs(lv, run.diff), tier = speedTier(ms, par);
+  const prevTime = S.times[lv.id], record = prevTime===undefined || ms < prevTime;
+  // Speed bonus: a share of the level's XP on a first clear at this difficulty, or a flat 10 for beating your best time later.
+  const speedBase = newBest ? Math.round(base*tier.pct/100) : (record && prevTime!==undefined && tier.pct>0 ? 10 : 0);
+  const earned = Math.round((base+speedBase)*d.mult), speedXP = Math.round(speedBase*d.mult);
+  if(record) S.times[lv.id] = Math.round(ms);
   S.xp += earned;
   S.done[lv.id] = Math.max(prevStars||0, stars);
   S.best[lv.id] = Math.max(prevBest??-1, run.diff);
@@ -1024,7 +1424,8 @@ function renderLevelResult(){
     <div class="kicker">${lv.boss?"Boss defeated":"Level complete"} · ${d.label}</div>
     <h2>${lv.title}</h2>
     <div class="big-stars">${[1,2,3].map(s=>I.star(s<=stars)).join("")}</div>
-    <div class="tally"><div><b>+${earned}</b><small>XP earned</small></div><div><b>${run.hearts}/${d.hearts}</b><small>Hearts left</small></div><div><b>${S.streak}</b><small>Day streak</small></div></div>
+    <div class="tally"><div><b>+${earned}</b><small>XP earned</small></div><div><b>${clock(ms)}</b><small>Time · target ${clock(par)}</small></div><div><b>${run.hearts}/${d.hearts}</b><small>Hearts left</small></div><div><b>${S.streak}</b><small>Day streak</small></div></div>
+    <p class="speed s${SPEED.indexOf(tier)}"><b>${tier.name}</b> ${speedXP ? `· speed bonus +${speedXP} XP` : tier.pct ? "· speed bonus only on a first clear or a new best time" : `· finish within ${clock(par*(tier.name==="Steady"?1:2))} for ${tier.name==="Steady"?"a 25% bonus":"a steady pace"}`}${record && prevTime!==undefined ? ` · New best time (was ${clock(prevTime)})` : ""}</p>
     <p>Rank: <b>${RANKS[rankOf(S.xp)][1]}</b> · ${S.xp} XP total${newBest?"":" · Replays on the same difficulty only earn XP for new stars"}</p>
     ${badgeLines()}
   </article>
@@ -1056,6 +1457,5 @@ function renderPracticeResult(){
   window.scrollTo(0,0);
 }
 
-renderMap();
-checkApk();
+boot();
 </script>
